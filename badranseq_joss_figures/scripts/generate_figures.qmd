@@ -80,7 +80,7 @@ p_combined <- p_seurat + p_badranseq +
 ggsave(
   "../write/figures/fig1_comparison.svg",
   p_combined,
-  width = 14, height = 5)
+  width = 14, height = 7)
 ```
 
 ## PCA with Variance Labels
@@ -127,7 +127,7 @@ p_combined <- p_pc12 + p_pc23 +
 ggsave(
   "../write/figures/fig2_pca_variance.svg",
   p_combined,
-  width = 14, height = 5)
+  width = 14, height = 7)
 ```
 
 ## Split-Panel Silhouette Visualisation
@@ -171,7 +171,7 @@ p_split <- BadranSeq::do_UmapPlot(pbmc3k, split.by = "condition")
 ggsave(
   "../write/figures/fig3_split_silhouette.svg",
   p_split,
-  width = 14, height = 7)
+  width = 14, height = 8)
 ```
 
 ## Feature Expression Overlay
@@ -202,20 +202,18 @@ data(pbmc3k)
 
 # Processing ----------
 
-features <- c("CD3D", "CD8A", "CD14")
-plots <- BadranSeq::do_FeaturePlot(pbmc3k, features = features, reduction = "umap")
-
-p_combined <- wrap_plots(plots, ncol = 3) +
-  plot_annotation(
-    title = "Gene Expression Overlay",
-    theme = theme(plot.title = element_text(face = "bold", size = 16, hjust = 0.5))
-  )
+p_features <- BadranSeq::do_FeaturePlot(
+  pbmc3k,
+  features = c("CD3D", "CD8A", "CD14"),
+  reduction = "umap",
+  ncol = 3
+)
 
 # Outputs ----------
 
 ggsave(
   "../write/figures/fig4_featureplot.svg",
-  p_combined,
+  p_features,
   width = 14, height = 5)
 ```
 

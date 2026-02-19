@@ -53,7 +53,7 @@ The paper references SVG versions. Each figure also exists as PDF and PNG.
 
 ## Citation Keys
 
-All `@cite-key` references in `paper.qmd` must have a matching entry in `references.bib`. Current keys: `hao2024`, `stuart2019`, `butler2018`, `blancocarmona2022`, `mcinnes2018`, `wickham2016`, `zeileis2020`, `fahrenberger2020`, `heumos2023`, `luecken2019`, `rcore2024`, `garnier2023`, `patil2021`, `brunson2020`.
+All `@cite-key` references in `paper.qmd` must have a matching entry in `references.bib`. Current keys: `hao2024`, `stuart2019`, `butler2018`, `blancocarmona2022`, `mcinnes2018`, `wickham2016`, `zeileis2020`, `ovchinnikova2020`, `heumos2023`, `luecken2019`, `rcore2024`, `garnier2023`, `patil2021`, `brunson2020`.
 
 ## Relationship to Parent Package
 
