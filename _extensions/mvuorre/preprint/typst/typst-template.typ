@@ -173,17 +173,16 @@
   show quote.where(block: true): set par(first-line-indent: 0em)
 
   /* Improved figure display */
-  // Add space above and below
-  show figure: f => { [#v(leading) #f #v(leading) ] }
+  // Add space above and below figures
+  show figure: f => { [#v(spacing * 1.5) #f #v(spacing * 1.5) ] }
   // Set block width to align caption to page/column
   // Target figure only as could otherwise mess with table formatting
   show figure.where(kind: "quarto-float-fig"): set block(width: 100%)
-  // Left-align captions and italicize "Figure X."
+  // Left-align captions, fully italicized
   show figure.caption: it => [
     #set align(left)
     #set par(first-line-indent: 0em)
-    #emph([#it.supplement #context it.counter.display(it.numbering).])
-    #it.body
+    #emph([#it.supplement #context it.counter.display(it.numbering). #it.body])
   ]
 
   /* Page layout settings */
