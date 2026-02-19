@@ -1,0 +1,157 @@
+---
+title: "BadranSeq: Publication-Ready Visualisation for Single-Cell RNA Sequencing Data in R"
+author:
+  - name: Badran Elshenawy
+    email: badran.elshenawy@ndm.ox.ac.uk
+    corresponding: true
+    orcid: 0000-0001-5672-8517
+    affiliations:
+      - ref: ndm
+affiliations:
+  - id: ndm
+    name: University of Oxford
+    department: Nuffield Department of Medicine
+abstract: |
+  BadranSeq is an R package that provides publication-ready visualisation and tidy data extraction for single-cell RNA sequencing (scRNA-seq) data stored in Seurat objects. Built entirely on native ggplot2, BadranSeq eliminates the repetitive customisation required to produce clear, informative figures for manuscripts and presentations. Key features include automatic variance-explained annotations on PCA axes, cell border rendering for improved legibility, a silhouette-based split comparison that preserves spatial context, statistical violin plots with built-in hypothesis testing, Sankey diagrams for categorical metadata relationships, tidy data extraction functions replacing Seurat's FetchData, interactive cell selection, and a consistent publication-quality theme applied across all outputs.
+keywords: [single-cell RNA-seq, visualisation, Seurat, ggplot2, R]
+date: today
+date-format: full
+bibliography: references.bib
+format:
+  preprint-typst:
+    papersize: a4
+    fontsize: 11pt
+    section-numbering: "1.1.1"
+    leading: 1.0em
+    spacing: 0.8em
+    first-line-indent: 0em
+    line-number: true
+    running-head: "BadranSeq: Publication-Ready scRNA-seq Visualisation"
+    page-numbering: "1"
+    linkcolor: "rgb(72, 61, 139)"
+    bibliographystyle: "apa"
+    wordcount: true
+execute:
+  echo: false
+  warning: false
+---
+
+## Summary
+
+BadranSeq is an R package that provides publication-ready visualisation and tidy data extraction for single-cell RNA sequencing (scRNA-seq) data stored in Seurat objects [@hao2024]. Built entirely on native ggplot2 [@wickham2016], BadranSeq eliminates the repetitive customisation required to produce clear, informative figures for manuscripts. Key features include automatic variance-explained annotations on PCA axes, cell border rendering for improved legibility in dense embeddings, a silhouette-based split comparison that preserves spatial context, statistical violin plots with integrated nonparametric hypothesis testing via ggstatsplot [@patil2021], Sankey (alluvial) diagrams for visualising relationships between categorical metadata variables via ggalluvial [@brunson2020], tidy data extraction functions that replace `Seurat::FetchData()` with a cleaner tibble-based interface, interactive cell selection for subsetting, and a consistent publication-quality theme applied across all outputs. The package targets the most common visualisation and data wrangling tasks in scRNA-seq workflows and produces figures that are ready for journal submission without additional styling. BadranSeq is available under the MIT licence at <https://github.com/wolf5996/BadranSeq>.
+
+## Statement of Need
+
+Single-cell RNA sequencing has become a cornerstone technology in modern biology, enabling researchers to profile gene expression at the resolution of individual cells [@heumos2023; @luecken2019]. The Seurat toolkit [@hao2024; @stuart2019; @butler2018] is the most widely adopted R framework for scRNA-seq analysis, providing comprehensive workflows from raw count matrices through clustering, annotation, and visualisation. However, Seurat's default plotting functions prioritise generality over publication readiness. Researchers routinely spend substantial effort customising plots: manually computing and annotating variance explained on PCA axes, adding cell borders for visual clarity, styling themes, and constructing split-panel comparisons that retain spatial context.
+
+This gap between analysis output and publication-quality figures creates a recurring burden. Every new analysis requires the same boilerplate code, and the resulting inconsistency across projects and laboratories hinders reproducibility of visual outputs. SCpubr [@blancocarmona2022] addressed this gap comprehensively with a large suite of specialised plotting functions. However, SCpubr's breadth introduces a substantial dependency footprint that may not be warranted when only core dimensionality reduction and feature plots are needed.
+
+Beyond static visualisation, another common pain point in scRNA-seq workflows is the manual selection of cell subsets from embeddings. Researchers frequently need to isolate spatially defined populations --- for example, a cluster that does not correspond to any metadata label, or a region of interest identified during exploratory analysis. Seurat provides `CellSelector()`, but this function is tightly coupled to Seurat's own plotting pipeline and does not offer additive or subtractive selection modes. There is a clear need for a more flexible interactive selection tool that integrates with custom visualisation workflows.
+
+A further gap concerns statistical annotation and metadata exploration. Researchers routinely need to compare gene expression distributions across cell types, yet producing properly annotated statistical violin plots requires manually extracting data, running tests, and formatting results. Similarly, understanding how categorical metadata variables relate to one another --- for instance, how computationally derived clusters correspond to biological cell type annotations --- typically requires custom aggregation code. Finally, extracting tidy, analysis-ready data from Seurat objects remains cumbersome: `FetchData()` returns a data.frame with barcodes as rownames, mixes expression and metadata in a single call, and offers no control over expression layers.
+
+BadranSeq fills the niche of a lightweight, opinionated visualisation and data extraction layer that covers the most common scRNA-seq tasks --- UMAP, PCA, feature expression, elbow plots, statistical violin plots, Sankey diagrams, and tidy data extraction --- with sensible defaults that require no additional customisation for publication use. It additionally provides interactive utilities for cell selection and embedding exploration. By building directly on ggplot2 rather than wrapping higher-level abstractions, BadranSeq maintains full compatibility with the ggplot2 ecosystem, allowing researchers to further customise plots using familiar syntax when needed.
+
+## State of the Field
+
+Several tools exist for visualising scRNA-seq data in R. Seurat's built-in `DimPlot()` and `FeaturePlot()` functions [@hao2024] provide basic visualisation but require manual styling for publication use. SCpubr [@blancocarmona2022] offers a comprehensive suite of over 30 specialised plot types with publication-ready aesthetics, but its extensive feature set introduces a correspondingly large dependency tree. The dittoSeq package provides colourblind-friendly single-cell visualisations with a focus on accessibility. scater, part of the Bioconductor ecosystem, includes plotting utilities integrated with the SingleCellExperiment class.
+
+BadranSeq occupies a distinct position in this landscape. Unlike Seurat's defaults, it provides publication-ready output without customisation. Unlike SCpubr, it focuses on the core subset of plots that researchers use most frequently, resulting in a minimal dependency footprint (ggplot2, colorspace, and Seurat itself). Unlike dittoSeq and scater, it operates natively on Seurat objects and matches the workflow that the majority of scRNA-seq analysts use. Furthermore, BadranSeq bundles interactive cell selection functionality that goes beyond what Seurat's `CellSelector()` offers, providing additive and subtractive brush selection with a dedicated Shiny interface.
+
+@tbl-comparison summarises the key functional differences between BadranSeq and Seurat's default plotting.
+
+| Feature                        | Seurat Default | BadranSeq |
+|--------------------------------|:--------------:|:---------:|
+| Variance explained on PCA axes |       No       |    Yes    |
+| Cell borders                   |       No       |    Yes    |
+| Cluster labels by default      |       No       |    Yes    |
+| Split-panel silhouettes        |       No       |    Yes    |
+| Publication theme              |       No       |    Yes    |
+| Viridis feature plots          |       No       |    Yes    |
+| Interactive cell selection     |    Limited     | Additive/subtractive |
+| Automatic rasterisation        |       No       |    Yes    |
+| Statistical violin plots       |       No       | Kruskal–Wallis + pairwise |
+| Sankey / alluvial diagrams     |       No       |    Yes    |
+| Tidy data extraction           |    FetchData   | tibble-based, layer-aware |
+
+: Comparison of default visualisation behaviour between Seurat and BadranSeq. {#tbl-comparison}
+
+@fig-comparison illustrates these differences on the bundled PBMC 3k dataset. The left panel shows Seurat's default `DimPlot()` output; the right panel shows BadranSeq's `do_UmapPlot()` with default settings, demonstrating cell borders, cluster labels, and the publication-ready theme.
+
+![Seurat default UMAP visualisation (left) compared with BadranSeq's `do_UmapPlot()` output (right) on the PBMC 3k dataset. BadranSeq adds cell borders, boxed cluster labels, a vivid categorical colour palette, and a publication-ready theme with no additional user configuration.](badranseq_joss_figures/write/figures/fig1_comparison.svg){#fig-comparison width="100%"}
+
+## Software Design
+
+BadranSeq is structured around a small set of user-facing functions that share a common internal engine. The architecture follows a routing pattern:
+
+-   `do_DimPlot()` serves as a unified entry point that dispatches to `do_PcaPlot()` (which adds variance-explained labels), `do_UmapPlot()` (which adds standard embedding labels), or a generic handler for other reductions such as Harmony or t-SNE.
+-   `do_FeaturePlot()` overlays gene expression on any reduction using viridis colour scales [@garnier2023] by default, with support for quantile-based expression cutoffs.
+-   `EnhancedElbowPlot()` displays variance explained per principal component with optional cutoff annotation.
+-   `get_pca_variance()` returns a data.frame of variance explained and cumulative variance for programmatic use.
+-   `do_StatsViolinPlot()` creates statistical violin plots via `ggstatsplot::ggbetweenstats()` with automatic Seurat data extraction and nonparametric testing by default.
+-   `do_SankeyPlot()` visualises relationships between 2–3 categorical metadata variables as alluvial diagrams via ggalluvial.
+-   `fetch_cell_data()` and `fetch_feature_data()` extract tidy tibbles from Seurat objects, replacing `FetchData()` with explicit control over layers, embeddings, and metadata.
+
+All plotting functions share a consistent parameter interface (`object`, `reduction`, `group.by`, `split.by`, `plot_cell_borders`, etc.) and produce native ggplot2 objects that can be further modified with standard ggplot2 syntax. This design decision ensures that researchers are never locked into BadranSeq's defaults --- any output can be incrementally adjusted using the full power of ggplot2's grammar of graphics.
+
+@fig-pca demonstrates the automatic variance annotation provided by `do_PcaPlot()`, showing PC1 vs PC2 and PC2 vs PC3 with variance-explained percentages computed and formatted on each axis.
+
+![PCA visualisation with automatic variance-explained labels generated by `do_PcaPlot()`. Left: PC1 (33.1%) vs PC2 (13.0%). Right: PC2 (13.0%) vs PC3 (9.3%). Variance percentages are computed from the PCA standard deviations stored in the Seurat object and formatted into axis labels automatically.](badranseq_joss_figures/write/figures/fig2_pca_variance.svg){#fig-pca width="100%"}
+
+@fig-featureplot shows `do_FeaturePlot()` applied to three canonical PBMC markers, demonstrating the viridis colour scale and cell border rendering.
+
+![Gene expression overlay using `do_FeaturePlot()` for three canonical PBMC markers: CD3D (T cells), CD8A (cytotoxic T cells), and CD14 (monocytes). Expression values are mapped to the viridis colour scale with cell borders for improved legibility in dense regions.](badranseq_joss_figures/write/figures/fig4_featureplot.svg){#fig-featureplot width="100%"}
+
+### Theming and Colour
+
+A shared theme function (`theme_badranseq()`) enforces consistent aesthetics across all outputs: white background, no grid lines, bold axis titles, and bottom-positioned legends. This theme is also exported for use on arbitrary ggplot2 objects, allowing researchers to maintain visual consistency across both BadranSeq-generated and custom plots within the same manuscript. The colour palette generation (`generate_badranseq_colors()`) uses the colorspace Dark 3 qualitative palette [@zeileis2020] with saturation and value adjustments for more vivid, distinguishable categorical colours. These adjustments increase saturation by 0.2 and decrease value by 0.1 in HSV space, producing colours that are both vibrant and legible against a white background. @fig-elbow shows the `EnhancedElbowPlot()` output alongside a visualisation of the generated colour palette.
+
+![Left: `EnhancedElbowPlot()` displaying variance explained per principal component with a red dashed cutoff line at PC 10. Right: the categorical colour palette produced by `generate_badranseq_colors()` for 10 clusters, demonstrating the vivid, distinguishable colours derived from the colorspace Dark 3 palette with HSV adjustments.](badranseq_joss_figures/write/figures/fig5_elbow_colors.svg){#fig-elbow width="100%"}
+
+### Split-Panel Silhouette Visualisation
+
+When `split.by` is specified, BadranSeq creates multi-panel plots where each panel shows the full dataset as a grey silhouette with cell borders, overlaid with coloured cells belonging to only the current split category. This approach, inspired by SCpubr [@blancocarmona2022], preserves crucial spatial context that is lost in standard faceting, where each panel contains only a subset of cells. In Seurat's default `split.by` behaviour, the viewer cannot determine where a given population resides relative to the overall embedding structure. BadranSeq's silhouette approach solves this by rendering all cells in every panel, ensuring that spatial relationships are preserved across comparisons. Panels are combined using patchwork with shared legends and consistent axis limits. @fig-silhouette demonstrates this feature with a synthetic condition split.
+
+![Split-panel silhouette visualisation using `do_UmapPlot(split.by = "condition")`. Each panel renders all cells as a grey silhouette with black borders, overlaying only the cells belonging to the current split category (Control or Treatment) in colour. This preserves spatial context across panels, allowing the viewer to assess where each subpopulation resides within the overall embedding structure.](badranseq_joss_figures/write/figures/fig3_split_silhouette.svg){#fig-silhouette width="100%"}
+
+### Statistical Violin Plots
+
+`do_StatsViolinPlot()` wraps `ggstatsplot::ggbetweenstats()` [@patil2021] with Seurat-aware data extraction, automatic colour generation, and a `group.levels` argument for comparing specific cell type subsets without manually subsetting the Seurat object. By default, a nonparametric omnibus test (Kruskal–Wallis) and pairwise comparisons (Dunn's test with Holm correction) are performed and annotated directly on the plot. The `pairwise.display` argument controls bracket visibility, allowing the user to show only significant pairs, all pairs, or suppress brackets entirely while retaining the omnibus test subtitle. @fig-violin demonstrates this feature on CD3D expression across three T cell subtypes.
+
+![Statistical violin plot generated by `do_StatsViolinPlot()` for CD3D expression across three T cell subtypes: Naive CD4 T, Memory CD4 T, and CD8 T. The subtitle displays the Kruskal–Wallis omnibus test result; pairwise brackets show Dunn's test comparisons. Colours are generated automatically using the BadranSeq palette.](badranseq_joss_figures/write/figures/fig6_stats_violin.svg){#fig-violin width="85%"}
+
+### Sankey Diagrams for Metadata Relationships
+
+`do_SankeyPlot()` creates alluvial diagrams showing how cells distribute across 2–3 categorical metadata variables, powered by ggalluvial [@brunson2020]. A common use case is visualising how computationally derived clusters correspond to biological cell type annotations. Each stratum is labelled and coloured; flows connect cells across variables, immediately revealing whether clusters map cleanly to single cell types or are split across multiple annotations. @fig-sankey demonstrates this mapping on the PBMC 3k dataset.
+
+![Sankey (alluvial) diagram generated by `do_SankeyPlot()` showing the relationship between Seurat cluster assignments (left) and biological cell type annotations (right) in the PBMC 3k dataset. Flows connect cells across categories, revealing cluster–annotation correspondence.](badranseq_joss_figures/write/figures/fig7_sankey.svg){#fig-sankey width="90%"}
+
+### Tidy Data Extraction
+
+BadranSeq provides two focused data extraction functions that replace `Seurat::FetchData()` with a cleaner interface. `fetch_cell_data()` extracts cell-level metadata and embeddings as a tidy tibble with `cell_id` as an explicit column (rather than trapped in rownames). `fetch_feature_data()` extracts feature expression data in long format --- one row per cell per feature --- with expression values as columns named after the requested layers (`counts`, `data`, etc.). Both functions offer explicit control over which embeddings, metadata columns, and expression layers to include, enabling composable pipelines with dplyr and ggplot2 without the manual reshaping typically required after `FetchData()`.
+
+### Interactive Cell Selection
+
+A recurring need in scRNA-seq analysis is the ability to select arbitrary subsets of cells from a dimensionality reduction plot --- for example, to isolate a spatially coherent population that does not correspond to any existing cluster label, or to manually gate cells based on their embedding coordinates. BadranSeq addresses this with `select_cells_interactive()`, a Shiny-based application that provides a full-featured selection workflow. The user can brush-select cells from any computed embedding (UMAP, t-SNE, or PCA), with support for additive selection (building up a selection across multiple brush operations), subtractive deselection (removing cells from an existing selection), and a clear function to start over. Selected cells are highlighted with red ring markers in real time. Upon completion, the function returns either a character vector of cell barcodes or a subsetted Seurat object ready for downstream analysis. This approach is more flexible than Seurat's built-in `CellSelector()`, which requires the user to produce the plot through Seurat's own pipeline and does not support additive or subtractive selection modes.
+
+Additionally, `seurat_sleepwalk()` provides a thin wrapper around the sleepwalk package [@fahrenberger2020] for interactively exploring how faithfully a 2D embedding preserves high-dimensional distances. The user hovers over cells and observes colour changes indicating which other cells are nearby in the original feature space, helping to identify regions where the embedding may introduce distortions.
+
+### Performance Considerations
+
+For datasets exceeding 50,000 cells, BadranSeq automatically enables point rasterisation via ggrastr, preventing prohibitively large vector graphics while maintaining crisp text and axes. This threshold is configurable through the `raster` parameter. The rasterisation is applied selectively to the point layers only, ensuring that labels, axes, and legends remain as sharp vector elements. This design allows BadranSeq to scale to atlas-scale datasets without sacrificing figure quality or producing unwieldy file sizes.
+
+## Research Impact Statement
+
+BadranSeq was developed during active scRNA-seq research at the University of Oxford to address workflow inefficiencies encountered across multiple projects. The package is publicly available on GitHub and installable via standard R package managers. While BadranSeq is a newly released tool, it addresses a documented and widely recognised need in the single-cell community for lightweight, publication-ready visualisation that integrates seamlessly with the dominant Seurat workflow. The package ships with a bundled PBMC 3k dataset (processed with SCTransform normalisation, PCA, and UMAP) to facilitate immediate testing and reproducible examples. A pkgdown documentation site is hosted at <https://wolf5996.github.io/BadranSeq/>, providing function references and usage vignettes. The package has been designed with the explicit goal of reducing the gap between exploratory analysis and figure generation, a step that currently consumes a disproportionate amount of researcher time in scRNA-seq projects.
+
+## AI Usage Disclosure
+
+Generative AI tools (Claude, Anthropic) were used during the development of BadranSeq to assist with code generation, documentation writing, and manuscript drafting. All AI-generated content was reviewed, tested, and validated by the author.
+
+## Acknowledgements
+
+The aesthetic design of BadranSeq is heavily inspired by SCpubr [@blancocarmona2022] by Enrique Blanco Carmona. Key design elements adapted from SCpubr include the cell border visualisation, colour palette generation strategy, and the silhouette approach for split-panel comparisons. BadranSeq differs by providing a lighter-weight, native ggplot2 implementation without SCpubr as a dependency, while adding features such as automatic PCA variance labels, statistical violin plots, Sankey diagrams, tidy data extraction, and interactive cell selection.
+
+The author thanks the developers of the R ecosystem [@rcore2024], Seurat [@hao2024], ggplot2 [@wickham2016], ggstatsplot [@patil2021], ggalluvial [@brunson2020], and UMAP [@mcinnes2018] for the foundational tools upon which BadranSeq is built.
+
+## References

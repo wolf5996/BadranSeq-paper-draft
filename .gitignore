@@ -1,0 +1,8 @@
+# Quarto cache
+.quarto/
+
+# OS
+.DS_Store
+
+# Rendered output (regenerate with quarto render)
+paper.pdf

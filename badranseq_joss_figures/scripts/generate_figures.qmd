@@ -1,0 +1,364 @@
+---
+title: "BadranSeq JOSS Paper — Figure Generation"
+author: "Badran Elshenawy"
+date: today
+format:
+  html:
+    theme: darkly
+    toc: true
+    toc-depth: 3
+    code-fold: show
+    code-tools: true
+    embed-resources: true
+engine: knitr
+execute:
+  eval: false
+  warning: false
+  message: false
+---
+
+## Overview
+
+This script generates all figures for the BadranSeq JOSS paper using the
+bundled `pbmc3k` dataset. Each section is self-contained and produces a
+single publication-ready SVG vector graphic.
+
+Figures are saved to `../write/figures/` and referenced by `paper.qmd` via
+`badranseq_joss_figures/write/figures/`.
+
+| Figure | File | Description |
+|--------|------|-------------|
+| 1 | `fig1_comparison.svg` | Seurat default vs BadranSeq UMAP |
+| 2 | `fig2_pca_variance.svg` | PCA with automatic variance labels |
+| 3 | `fig3_split_silhouette.svg` | Split-panel silhouette visualisation |
+| 4 | `fig4_featureplot.svg` | Gene expression overlay |
+| 5 | `fig5_elbow_colors.svg` | Elbow plot with cutoff + colour palette |
+| 6 | `fig6_stats_violin.svg` | Statistical violin plot with pairwise testing |
+| 7 | `fig7_sankey.svg` | Sankey/alluvial diagram for metadata relationships |
+
+## Seurat Default vs BadranSeq Comparison
+
+This figure demonstrates the visual difference between Seurat's `DimPlot()`
+defaults and BadranSeq's `do_UmapPlot()` output on the same dataset.
+
+- **Left panel**: `Seurat::DimPlot()` with default settings
+  - No cell borders, no cluster labels, default colour palette
+- **Right panel**: `BadranSeq::do_UmapPlot()` with default settings
+  - Cell borders, boxed cluster labels, publication theme, vivid palette
+- **Composition**: Side-by-side via `patchwork` with panel annotations
+
+```{r}
+#| label: fig1-comparison
+
+# Libraries ----------
+
+library(BadranSeq)
+library(Seurat)
+library(ggplot2)
+library(patchwork)
+
+# Inputs ----------
+
+data(pbmc3k)
+
+# Processing ----------
+
+p_seurat <- Seurat::DimPlot(pbmc3k, reduction = "umap") +
+  ggtitle("Seurat Default")
+
+p_badranseq <- BadranSeq::do_UmapPlot(pbmc3k) +
+  ggtitle("BadranSeq")
+
+p_combined <- p_seurat + p_badranseq +
+  plot_annotation(
+    title = "UMAP Visualisation Comparison",
+    theme = theme(plot.title = element_text(face = "bold", size = 16, hjust = 0.5))
+  )
+
+# Outputs ----------
+
+ggsave(
+  "../write/figures/fig1_comparison.svg",
+  p_combined,
+  width = 14, height = 5)
+```
+
+## PCA with Variance Labels
+
+This figure showcases BadranSeq's automatic variance-explained annotation on
+PCA axes — a feature absent from Seurat's default plotting.
+
+- **Left panel**: PC1 vs PC2 with variance percentages
+- **Right panel**: PC2 vs PC3 with variance percentages
+- **Key feature**: Axis labels automatically formatted as "PC1 (X.X%)"
+- **Rationale**: Variance explained is essential context for interpreting PCA
+  plots, yet Seurat requires manual calculation and annotation
+
+```{r}
+#| label: fig2-pca-variance
+
+# Libraries ----------
+
+library(BadranSeq)
+library(Seurat)
+library(ggplot2)
+library(patchwork)
+
+# Inputs ----------
+
+data(pbmc3k)
+
+# Processing ----------
+
+p_pc12 <- BadranSeq::do_PcaPlot(pbmc3k, dims = c(1, 2)) +
+  ggtitle("PC1 vs PC2")
+
+p_pc23 <- BadranSeq::do_PcaPlot(pbmc3k, dims = c(2, 3)) +
+  ggtitle("PC2 vs PC3")
+
+p_combined <- p_pc12 + p_pc23 +
+  plot_annotation(
+    title = "PCA with Automatic Variance Labels",
+    theme = theme(plot.title = element_text(face = "bold", size = 16, hjust = 0.5))
+  )
+
+# Outputs ----------
+
+ggsave(
+  "../write/figures/fig2_pca_variance.svg",
+  p_combined,
+  width = 14, height = 5)
+```
+
+## Split-Panel Silhouette Visualisation
+
+This figure demonstrates BadranSeq's silhouette approach for split-panel
+comparisons. A synthetic condition column is added to illustrate the feature.
+
+- **Approach**: Each panel renders all cells as a grey silhouette background,
+  then overlays only the cells belonging to the current split category in colour
+- **Advantage over Seurat**: Standard faceting removes cells from other groups,
+  destroying spatial context; the silhouette preserves the full embedding shape
+- **Synthetic data**: Random "Control" / "Treatment" assignment (`set.seed(42)`)
+  for reproducible demonstration
+
+```{r}
+#| label: fig3-split-silhouette
+
+# Libraries ----------
+
+library(BadranSeq)
+library(Seurat)
+library(ggplot2)
+
+# Inputs ----------
+
+data(pbmc3k)
+
+# Processing ----------
+
+set.seed(42)
+pbmc3k$condition <- sample(
+  c("Control", "Treatment"),
+  ncol(pbmc3k),
+  replace = TRUE
+)
+
+p_split <- BadranSeq::do_UmapPlot(pbmc3k, split.by = "condition")
+
+# Outputs ----------
+
+ggsave(
+  "../write/figures/fig3_split_silhouette.svg",
+  p_split,
+  width = 14, height = 7)
+```
+
+## Feature Expression Overlay
+
+This figure demonstrates `do_FeaturePlot()` with viridis colour scales for
+gene expression visualisation.
+
+- **Genes selected**: CD3D (T-cell marker), CD8A (cytotoxic T-cell marker),
+  CD14 (monocyte marker)
+  - These canonical markers span major PBMC populations
+- **Colour scale**: Viridis "B" palette (mako), reversed direction
+  - Perceptually uniform, colourblind-friendly
+- **Cell borders**: Black borders improve legibility in dense regions
+
+```{r}
+#| label: fig4-featureplot
+
+# Libraries ----------
+
+library(BadranSeq)
+library(Seurat)
+library(ggplot2)
+library(patchwork)
+
+# Inputs ----------
+
+data(pbmc3k)
+
+# Processing ----------
+
+features <- c("CD3D", "CD8A", "CD14")
+plots <- BadranSeq::do_FeaturePlot(pbmc3k, features = features, reduction = "umap")
+
+p_combined <- wrap_plots(plots, ncol = 3) +
+  plot_annotation(
+    title = "Gene Expression Overlay",
+    theme = theme(plot.title = element_text(face = "bold", size = 16, hjust = 0.5))
+  )
+
+# Outputs ----------
+
+ggsave(
+  "../write/figures/fig4_featureplot.svg",
+  p_combined,
+  width = 14, height = 5)
+```
+
+## Elbow Plot and Colour Palette
+
+This figure combines two utility outputs: the enhanced elbow plot with cutoff
+annotation, and a demonstration of the BadranSeq colour palette.
+
+- **Left panel**: `EnhancedElbowPlot()` with `cutoff_pc = 10`
+  - Red dashed line marks the chosen dimensionality
+  - Variance explained (%) on y-axis rather than raw standard deviation
+- **Right panel**: Colour palette from `generate_badranseq_colors(10)`
+  - Visualised as a bar chart showing the categorical colour scheme
+  - Dark 3 qualitative palette with saturation/value adjustments
+
+```{r}
+#| label: fig5-elbow-colors
+
+# Libraries ----------
+
+library(BadranSeq)
+library(Seurat)
+library(ggplot2)
+library(patchwork)
+
+# Inputs ----------
+
+data(pbmc3k)
+
+# Processing ----------
+
+p_elbow <- BadranSeq::EnhancedElbowPlot(pbmc3k, ndims = 30, cutoff_pc = 10)
+
+colors <- BadranSeq::generate_badranseq_colors(10)
+color_df <- data.frame(
+  Cluster = factor(paste0("C", 0:9), levels = paste0("C", 0:9)),
+  Value = 1
+)
+
+p_palette <- ggplot(color_df, aes(x = Cluster, y = Value, fill = Cluster)) +
+  geom_col(width = 0.8, show.legend = FALSE) +
+  scale_fill_manual(values = setNames(colors, levels(color_df$Cluster))) +
+  labs(title = "BadranSeq Colour Palette", x = NULL, y = NULL) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title = element_text(face = "bold", hjust = 0.5),
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank(),
+    panel.grid = element_blank(),
+    plot.background = element_rect(fill = "white", color = NA),
+    panel.background = element_rect(fill = "white", color = NA)
+  )
+
+p_combined <- p_elbow + p_palette +
+  plot_layout(widths = c(2, 1)) +
+  plot_annotation(
+    title = "Variance Diagnostics and Colour Palette",
+    theme = theme(plot.title = element_text(face = "bold", size = 16, hjust = 0.5))
+  )
+
+# Outputs ----------
+
+ggsave(
+  "../write/figures/fig5_elbow_colors.svg",
+  p_combined,
+  width = 14, height = 5)
+```
+
+## Statistical Violin Plots
+
+This figure demonstrates `do_StatsViolinPlot()` with automatic statistical
+testing and pairwise comparisons on a subset of cell types.
+
+- **Gene**: CD3D (T-cell marker)
+- **Groups**: Naive CD4 T, Memory CD4 T, CD8 T (via `group.levels`)
+- **Statistics**: Kruskal–Wallis omnibus + Dunn's pairwise (default)
+- **Key feature**: Seurat-aware data extraction, automatic colour generation,
+  `group.levels` for comparing specific clusters without manual subsetting
+
+```{r}
+#| label: fig6-stats-violin
+
+# Libraries ----------
+
+library(BadranSeq)
+library(Seurat)
+library(ggplot2)
+
+# Inputs ----------
+
+data(pbmc3k)
+
+# Processing ----------
+
+p_violin <- BadranSeq::do_StatsViolinPlot(
+  pbmc3k,
+  features = "CD3D",
+  group.by = "seurat_annotations",
+  group.levels = c("Naive CD4 T", "Memory CD4 T", "CD8 T")
+)
+
+# Outputs ----------
+
+ggsave(
+  "../write/figures/fig6_stats_violin.svg",
+  p_violin,
+  width = 8, height = 6)
+```
+
+## Sankey / Alluvial Diagram
+
+This figure demonstrates `do_SankeyPlot()` showing the relationship between
+cluster assignments and biological cell type annotations.
+
+- **Columns**: `seurat_clusters` → `seurat_annotations`
+- **Key feature**: Each stratum is labelled and coloured; flows show how cells
+  distribute across categories
+- **Use case**: Quickly assess whether clusters map cleanly to cell types
+
+```{r}
+#| label: fig7-sankey
+
+# Libraries ----------
+
+library(BadranSeq)
+library(Seurat)
+library(ggplot2)
+
+# Inputs ----------
+
+data(pbmc3k)
+
+# Processing ----------
+
+p_sankey <- BadranSeq::do_SankeyPlot(
+  pbmc3k,
+  columns = c("seurat_clusters", "seurat_annotations")
+)
+
+# Outputs ----------
+
+ggsave(
+  "../write/figures/fig7_sankey.svg",
+  p_sankey,
+  width = 9, height = 6)
+```
