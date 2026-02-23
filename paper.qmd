@@ -136,10 +136,6 @@ For datasets exceeding 50,000 cells, BadranSeq automatically enables point raste
 
 BadranSeq was developed during active scRNA-seq research at the University of Oxford to address workflow inefficiencies encountered across multiple projects. The package is publicly available on GitHub and installable via standard R package managers. While BadranSeq is a newly released tool, it addresses a documented and widely recognised need in the single-cell community for lightweight, publication-ready visualisation that integrates seamlessly with the dominant Seurat workflow. The package ships with a bundled PBMC 3k dataset (processed with SCTransform normalisation, PCA, and UMAP) to facilitate immediate testing and reproducible examples. A pkgdown documentation site is hosted at <https://wolf5996.github.io/BadranSeq/>, providing function references and usage vignettes. The package has been designed with the explicit goal of reducing the gap between exploratory analysis and figure generation, a step that currently consumes a disproportionate amount of researcher time in scRNA-seq projects.
 
-## AI Usage Disclosure
-
-Generative AI tools (Claude, Anthropic) were used during the development of BadranSeq to assist with code generation, documentation writing, and manuscript drafting. All AI-generated content was reviewed, tested, and validated by the author.
-
 ## Acknowledgements
 
 The aesthetic design of BadranSeq is heavily inspired by SCpubr [@blancocarmona2022] by Enrique Blanco Carmona. Key design elements adapted from SCpubr include the cell border visualisation, colour palette generation strategy, and the silhouette approach for split-panel comparisons. BadranSeq differs by providing a lighter-weight, native ggplot2 implementation without SCpubr as a dependency, while adding features such as automatic PCA variance labels, statistical violin plots, Sankey diagrams, tidy data extraction, and interactive cell selection.
