@@ -4,5 +4,21 @@
 # OS
 .DS_Store
 
+# Personal context (CV, notes — not for version control)
+context/
+
+# Quarto build artefacts
+paper_files/
+badranseq_joss_figures/write/figures/*.pdf
+
 # Rendered output (regenerate with quarto render)
 paper.pdf
+paper.tex
+paper.log
+paper.aux
+paper.out
+paper.bbl
+paper.blg
+paper.fls
+paper.fdb_latexmk
+paper.synctex.gz
