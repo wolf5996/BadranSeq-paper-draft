@@ -41,6 +41,13 @@ format:
         \usepackage[scaled=0.85]{inconsolata} % Monospace
         \linespread{1.05}               % Palatino needs slightly more leading
 
+        % ── Inline code styling (grey background like GitHub) ────
+        \usepackage{soul}
+        \definecolor{codebg}{HTML}{F0F0F0}
+        \sethlcolor{codebg}
+        \let\OldTexttt\texttt
+        \renewcommand{\texttt}[1]{\OldTexttt{\hl{\mbox{#1}}}}
+
         % ── Microtypography ────────────────────────────────────────
         \usepackage{microtype}
 
@@ -51,9 +58,9 @@ format:
 
         % ── Section styling ───────────────────────────────────────
         \usepackage{titlesec}
-        \titleformat{\section}{\large\bfseries}{\thesection}{1em}{}
-        \titleformat{\subsection}{\normalsize\bfseries}{\thesubsection}{1em}{}
-        \titleformat{\subsubsection}{\normalsize\itshape}{\thesubsubsection}{1em}{}
+        \titleformat{\section}{\large\bfseries\color{DarkSlateBlue}}{\thesection}{1em}{}
+        \titleformat{\subsection}{\normalsize\bfseries\color{DarkSlateBlue}}{\thesubsection}{1em}{}
+        \titleformat{\subsubsection}{\normalsize\itshape\color{DarkSlateBlue}}{\thesubsubsection}{1em}{}
         \titlespacing*{\section}{0pt}{1.8ex plus 0.6ex minus 0.2ex}{0.8ex plus 0.2ex}
         \titlespacing*{\subsection}{0pt}{1.4ex plus 0.4ex minus 0.2ex}{0.6ex plus 0.2ex}
 
@@ -72,6 +79,8 @@ format:
         % ── Tables ───────────────────────────────────────────────
         \usepackage{booktabs}
         \usepackage{array}
+        \usepackage{colortbl}
+        \definecolor{tableheader}{gray}{0.88}
 
         % ── Floats ───────────────────────────────────────────────
         \usepackage{float}
@@ -160,27 +169,34 @@ scater, part of the Bioconductor ecosystem, includes plotting utilities integrat
 BadranSeq occupies a distinct position.
 Unlike Seurat's defaults, it produces publication-ready output without customisation.
 Unlike SCpubr, it focuses on the core visualisation tasks that researchers use daily, resulting in a minimal dependency footprint.
-Unlike dittoSeq and scater, it operates natively on Seurat objects and integrates directly with the dominant scRNA-seq workflow.
+Unlike dittoSeq and scater, it operates natively on Seurat objects and integrates directly with the dominant scRNA-seq workflow (@fig-comparison).
 
 @tbl-comparison summarises the functional differences.
 
-| Feature                        | Seurat | BadranSeq |
-|:-------------------------------|:------:|:---------:|
-| Variance explained on PCA axes |   No   |    Yes    |
-| Cell borders                   |   No   |    Yes    |
-| Cluster labels by default      |   No   |    Yes    |
-| Split-panel silhouettes        |   No   |    Yes    |
-| Publication theme              |   No   |    Yes    |
-| Viridis feature plots          |   No   |    Yes    |
-| Interactive cell selection     |  Limited  | Additive / subtractive |
-| Automatic rasterisation        |   No   |    Yes    |
-| Statistical violin plots       |   No   | Kruskal--Wallis |
-| Sankey / alluvial diagrams     |   No   |    Yes    |
-| Tidy data extraction           |  FetchData  | Tibble-based |
-
-: Comparison of default capabilities between Seurat and BadranSeq. {#tbl-comparison}
-
-@fig-comparison illustrates these differences on the bundled PBMC 3k dataset.
+```{=latex}
+\begin{table}[htbp]
+\centering
+\caption{Comparison of default capabilities between Seurat and BadranSeq.}\label{tbl-comparison}
+\begin{tabular}{@{}l c c@{}}
+\toprule
+\rowcolor{tableheader}
+\textbf{Feature} & \textbf{Seurat} & \textbf{BadranSeq} \\
+\midrule
+Variance explained on PCA axes  & ---          & \checkmark \\
+Cell borders                    & ---          & \checkmark \\
+Cluster labels by default       & ---          & \checkmark \\
+Split-panel silhouettes         & ---          & \checkmark \\
+Publication theme               & ---          & \checkmark \\
+Viridis feature plots           & ---          & \checkmark \\
+Interactive cell selection      & Limited      & Additive / subtractive \\
+Automatic rasterisation         & ---          & \checkmark \\
+Statistical violin plots        & ---          & Kruskal--Wallis \\
+Sankey / alluvial diagrams      & ---          & \checkmark \\
+Tidy data extraction            & \texttt{FetchData} & Tibble-based \\
+\bottomrule
+\end{tabular}
+\end{table}
+```
 
 ![Seurat default UMAP (left) compared with BadranSeq's `do_UmapPlot()` (right) on the PBMC 3k dataset. BadranSeq adds cell borders, boxed cluster labels, a vivid categorical palette, and a publication theme with no additional configuration.](badranseq_joss_figures/write/figures/fig1_comparison.svg){#fig-comparison width="100%"}
 
@@ -189,13 +205,11 @@ Unlike dittoSeq and scater, it operates natively on Seurat objects and integrate
 BadranSeq is organised around a small set of user-facing functions that share a common internal engine and a consistent parameter interface (`object`, `reduction`, `group.by`, `split.by`, `plot_cell_borders`, etc.).
 All functions accept a Seurat object as input and return native ggplot2 objects.
 
-The architecture follows a routing pattern: `do_DimPlot()` serves as a unified entry point, dispatching to `do_PcaPlot()` for PCA (which computes and formats variance-explained labels), `do_UmapPlot()` for UMAP, or a generic handler for other reductions such as Harmony or t-SNE.
-`do_FeaturePlot()` overlays gene expression on any reduction using viridis colour scales [@garnier2024], with support for quantile-based expression cutoffs.
+The architecture follows a routing pattern: `do_DimPlot()` serves as a unified entry point, dispatching to `do_PcaPlot()` for PCA (which computes and formats variance-explained labels; @fig-pca), `do_UmapPlot()` for UMAP, or a generic handler for other reductions such as Harmony or t-SNE.
+`do_FeaturePlot()` overlays gene expression on any reduction using viridis colour scales [@garnier2024], with support for quantile-based expression cutoffs (@fig-featureplot).
 `EnhancedElbowPlot()` displays variance explained per principal component with optional cutoff annotation, and `get_pca_variance()` exposes the underlying variance data as a data.frame.
 
 Because every output is a standard ggplot2 object, researchers are never locked into BadranSeq's defaults --- any plot can be incrementally adjusted using the full grammar of graphics.
-
-@fig-pca demonstrates the automatic variance annotation, and @fig-featureplot shows expression overlays for three canonical PBMC markers.
 
 ![PCA with automatic variance-explained labels. Left: PC1 (33.1\%) vs PC2 (13.0\%). Right: PC2 (13.0\%) vs PC3 (9.3\%). Variance percentages are computed from PCA standard deviations stored in the Seurat object.](badranseq_joss_figures/write/figures/fig2_pca_variance.svg){#fig-pca width="100%"}
 
