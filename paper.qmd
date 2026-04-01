@@ -79,12 +79,19 @@ format:
         % ── Tables ───────────────────────────────────────────────
         \usepackage{booktabs}
         \usepackage{array}
-        \usepackage{colortbl}
-        \definecolor{tableheader}{gray}{0.88}
 
         % ── Floats ───────────────────────────────────────────────
         \usepackage{float}
         \usepackage{placeins}
+        \setlength{\intextsep}{6pt plus 2pt minus 2pt}      % space above/below in-text floats
+        \setlength{\textfloatsep}{8pt plus 2pt minus 4pt}    % space between top/bottom floats and text
+        \setlength{\floatsep}{6pt plus 2pt minus 2pt}        % space between consecutive floats
+        \setlength{\abovecaptionskip}{4pt}                   % space above caption
+        \setlength{\belowcaptionskip}{2pt}                   % space below caption
+        \renewcommand{\topfraction}{0.9}                     % max fraction of page for top floats
+        \renewcommand{\bottomfraction}{0.9}                  % max fraction of page for bottom floats
+        \renewcommand{\textfraction}{0.1}                    % min fraction of page for text
+        \renewcommand{\floatpagefraction}{0.8}               % min fraction to trigger float page
 
         % ── Custom title block (Quarto drops affiliations) ──────
         \usepackage{changepage}
@@ -173,37 +180,28 @@ Unlike dittoSeq and scater, it operates natively on Seurat objects and integrate
 
 @tbl-comparison summarises the functional differences.
 
-```{=latex}
-\begin{table}[htbp]
-\centering
-\caption{Comparison of default capabilities between Seurat and BadranSeq.}\label{tbl-comparison}
-\begin{tabular}{@{}l c c@{}}
-\toprule
-\rowcolor{tableheader}
-\textbf{Feature} & \textbf{Seurat} & \textbf{BadranSeq} \\
-\midrule
-Variance explained on PCA axes  & ---          & \checkmark \\
-Cell borders                    & ---          & \checkmark \\
-Cluster labels by default       & ---          & \checkmark \\
-Split-panel silhouettes         & ---          & \checkmark \\
-Publication theme               & ---          & \checkmark \\
-Viridis feature plots           & ---          & \checkmark \\
-Interactive cell selection      & Limited      & Additive / subtractive \\
-Automatic rasterisation         & ---          & \checkmark \\
-Statistical violin plots        & ---          & Kruskal--Wallis \\
-Sankey / alluvial diagrams      & ---          & \checkmark \\
-Tidy data extraction            & \texttt{FetchData} & Tibble-based \\
-\bottomrule
-\end{tabular}
-\end{table}
-```
+| Feature                        | Seurat | BadranSeq |
+|:-------------------------------|:------:|:---------:|
+| Variance explained on PCA axes |   No   |    Yes    |
+| Cell borders                   |   No   |    Yes    |
+| Cluster labels by default      |   No   |    Yes    |
+| Split-panel silhouettes        |   No   |    Yes    |
+| Publication theme              |   No   |    Yes    |
+| Viridis feature plots          |   No   |    Yes    |
+| Interactive cell selection     |  Limited  | Additive / subtractive |
+| Automatic rasterisation        |   No   |    Yes    |
+| Statistical violin plots       |   No   | Kruskal--Wallis |
+| Sankey / alluvial diagrams     |   No   |    Yes    |
+| Tidy data extraction           |  FetchData  | Tibble-based |
 
-![Seurat default UMAP (left) compared with BadranSeq's `do_UmapPlot()` (right) on the PBMC 3k dataset. BadranSeq adds cell borders, boxed cluster labels, a vivid categorical palette, and a publication theme with no additional configuration.](badranseq_joss_figures/write/figures/fig1_comparison.svg){#fig-comparison width="100%"}
+: Comparison of default capabilities between Seurat and BadranSeq. {#tbl-comparison}
 
 ## Software Design
 
 BadranSeq is organised around a small set of user-facing functions that share a common internal engine and a consistent parameter interface (`object`, `reduction`, `group.by`, `split.by`, `plot_cell_borders`, etc.).
 All functions accept a Seurat object as input and return native ggplot2 objects.
+
+![Seurat default UMAP (left) compared with BadranSeq's `do_UmapPlot()` (right) on the PBMC 3k dataset. BadranSeq adds cell borders, boxed cluster labels, a vivid categorical palette, and a publication theme with no additional configuration.](badranseq_joss_figures/write/figures/fig1_comparison.svg){#fig-comparison width="100%"}
 
 The architecture follows a routing pattern: `do_DimPlot()` serves as a unified entry point, dispatching to `do_PcaPlot()` for PCA (which computes and formats variance-explained labels; @fig-pca), `do_UmapPlot()` for UMAP, or a generic handler for other reductions such as Harmony or t-SNE.
 `do_FeaturePlot()` overlays gene expression on any reduction using viridis colour scales [@garnier2024], with support for quantile-based expression cutoffs (@fig-featureplot).
