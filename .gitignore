@@ -6,3 +6,12 @@
 
 # Rendered output (regenerate with quarto render)
 paper.pdf
+paper.tex
+paper.log
+paper.aux
+paper.out
+paper.bbl
+paper.blg
+paper.fls
+paper.fdb_latexmk
+paper.synctex.gz
