@@ -202,7 +202,7 @@ Unlike dittoSeq and scater, it operates natively on Seurat objects and integrate
 BadranSeq is organised around a small set of user-facing functions that share a common internal engine and a consistent parameter interface (`object`, `reduction`, `group.by`, `split.by`, `plot_cell_borders`, etc.).
 All functions accept a Seurat object as input and return native ggplot2 objects.
 
-![Comprehensive UMAP comparison showing Seurat (top row) versus BadranSeq (bottom row). Seurat's DimPlot() produces basic exploratory plots lacking cell borders, consistent themes, and publication styling. BadranSeq's do_UmapPlot() delivers publication-ready output with automatic cell borders, boxed cluster labels, vivid categorical colours, and integrated theming without additional configuration.](badranseq_joss_figures/write/figures/fig1_comparison.svg){#fig-comparison width="100%"}
+![Default UMAP comparison with Seurat on top and BadranSeq on bottom. Seurat's `DimPlot()` produces exploratory output requiring manual polishing, while BadranSeq's `do_UmapPlot()` provides publication-ready styling by default.](badranseq_joss_figures/write/figures/fig1_comparison.svg){#fig-comparison width="100%"}
 
 The architecture follows a routing pattern: `do_DimPlot()` serves as a unified entry point, dispatching to `do_PcaPlot()` for PCA (which computes and formats variance-explained labels; @fig-pca), `do_UmapPlot()` for UMAP, or a generic handler for other reductions such as Harmony or t-SNE.
 `do_FeaturePlot()` overlays gene expression on any reduction using viridis colour scales [@garnier2024], with support for quantile-based expression cutoffs (@fig-featureplot).
@@ -210,7 +210,7 @@ The architecture follows a routing pattern: `do_DimPlot()` serves as a unified e
 
 Because every output is a standard ggplot2 object, researchers are never locked into BadranSeq's defaults --- any plot can be incrementally adjusted using the full grammar of graphics.
 
-![PCA with automatic variance-explained labels. Left: PC1 (33.1\%) vs PC2 (13.0\%). Right: PC2 (13.0\%) vs PC3 (9.3\%). Variance percentages are computed from PCA standard deviations stored in the Seurat object.](badranseq_joss_figures/write/figures/fig2_pca_variance.svg){#fig-pca width="100%"}
+![PCA comparison with Seurat on top and BadranSeq on bottom. Seurat's default PCA views omit variance explained, whereas BadranSeq's `do_PcaPlot()` automatically annotates axis labels with variance percentages for immediate interpretability.](badranseq_joss_figures/write/figures/fig2_pca_variance.svg){#fig-pca width="100%"}
 
 ![Feature expression comparison showing Seurat's FeaturePlot() (top row) versus BadranSeq's do_FeaturePlot() (bottom row). Seurat uses default colour scales without cell borders. BadranSeq applies perceptually uniform viridis scales, cell borders for legibility in dense regions, and consistent publication styling. Genes shown: CD3D (T cells), CD8A (cytotoxic T cells), and CD14 (monocytes).](badranseq_joss_figures/write/figures/fig4_featureplot.svg){#fig-featureplot width="100%"}
 
@@ -218,7 +218,7 @@ Because every output is a standard ggplot2 object, researchers are never locked 
 
 A shared theme function, `theme_badranseq()`, enforces consistent aesthetics across all outputs: white background, no grid lines, bold axis titles, and bottom-positioned legends.
 The theme is exported for use on arbitrary ggplot2 objects, enabling visual consistency across an entire manuscript.
-Colour generation uses the colorspace Dark 3 qualitative palette [@zeileis2020] with saturation increased by 0.2 and value decreased by 0.1 in HSV space, yielding vivid yet distinguishable categorical colours (@fig-elbow).
+`EnhancedElbowPlot()` provides variance-explained diagnostics with an optional cutoff overlay, enabling direct comparison with Seurat's default elbow output (@fig-elbow).
 
 ![Elbow plot comparison. Top: Seurat's default `ElbowPlot()` showing standard deviation by principal component. Bottom: BadranSeq's `EnhancedElbowPlot()` showing variance explained with an annotated cutoff.](badranseq_joss_figures/write/figures/fig5_elbow_colors.svg){#fig-elbow width="80%"}
 
@@ -249,7 +249,7 @@ A common application is visualising how computationally derived clusters corresp
 
 The breadth of functionality in visualisation packages introduces a corresponding dependency burden that affects installation time, version compatibility, and long-term maintenance. BadranSeq maintains a minimal dependency tree with only 19 direct dependencies compared to 56 for SCpubr---a 66\% reduction (@fig-dependency). This streamlined approach reduces the risk of version conflicts, accelerates installation, and lowers the maintenance overhead for users while delivering equivalent publication-ready aesthetics for core visualisation tasks.
 
-![Dependency footprint comparison between BadranSeq and SCpubr. BadranSeq maintains 19 direct dependencies compared to 56 for SCpubr, representing a 66\% reduction in dependency burden. This translates to faster installation, fewer version conflicts, and reduced long-term maintenance overhead while achieving equivalent publication-ready aesthetics.](badranseq_joss_figures/write/figures/fig8_dependency_comparison.png){#fig-dependency width="80%"}
+![Dependency footprint comparison between BadranSeq and SCpubr. BadranSeq maintains 19 direct dependencies compared to 56 for SCpubr, representing a 66\% reduction in dependency burden. This translates to faster installation, fewer version conflicts, and reduced long-term maintenance overhead while achieving equivalent publication-ready aesthetics.](badranseq_joss_figures/write/figures/fig8_dependency_comparison.svg){#fig-dependency width="80%"}
 
 ### Tidy Data Extraction
 

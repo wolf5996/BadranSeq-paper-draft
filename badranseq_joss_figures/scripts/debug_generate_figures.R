@@ -26,55 +26,51 @@ figure_1 <- function() {
     ggtitle("Seurat: Default") +
     theme(plot.title = element_text(face = "bold", size = 12))
 
-  p_seurat_labels <- Seurat::DimPlot(pbmc3k, reduction = "umap", label = TRUE) +
-    ggtitle("Seurat: With Labels") +
-    theme(plot.title = element_text(face = "bold", size = 12))
-
   p_badran_default <- BadranSeq::do_UmapPlot(pbmc3k) +
     ggtitle("BadranSeq: Default") +
     theme(plot.title = element_text(face = "bold", size = 12))
 
-  p_badran_enhanced <- BadranSeq::do_UmapPlot(
-    pbmc3k,
-    label = TRUE,
-    plot_cell_borders = TRUE
-  ) +
-    ggtitle("BadranSeq: Enhanced") +
-    theme(plot.title = element_text(face = "bold", size = 12))
-
-  p_combined <- (p_seurat_default + p_seurat_labels) /
-    (p_badran_default + p_badran_enhanced) +
+  p_combined <- p_seurat_default / p_badran_default +
     plot_annotation(
-      title = "UMAP Visualisation Comparison",
-      subtitle = paste(
-        "Seurat (top) requires manual styling for publication;",
-        "BadranSeq (bottom) produces publication-ready output by default"
-      ),
+      title = "UMAP Default Comparison",
+      subtitle = "Seurat (top) produces exploratory output; BadranSeq (bottom) renders publication-ready styling by default",
       theme = theme(
         plot.title = element_text(face = "bold", size = 16, hjust = 0.5),
         plot.subtitle = element_text(size = 11, hjust = 0.5, colour = "grey40")
       )
     )
 
-  save_plot("fig1_comparison.svg", p_combined, 14, 10)
+  save_plot("fig1_comparison.svg", p_combined, 16, 10)
 }
 
 figure_2 <- function() {
   data(pbmc3k)
 
-  p_pc12 <- BadranSeq::do_PcaPlot(pbmc3k, dims = c(1, 2)) +
-    ggtitle("PC1 vs PC2")
+  p_seurat_pc12 <- Seurat::DimPlot(pbmc3k, reduction = "pca", dims = c(1, 2)) +
+    ggtitle("Seurat: PC1 vs PC2") +
+    theme(plot.title = element_text(face = "bold", size = 12))
 
-  p_pc23 <- BadranSeq::do_PcaPlot(pbmc3k, dims = c(2, 3)) +
-    ggtitle("PC2 vs PC3")
+  p_seurat_pc23 <- Seurat::DimPlot(pbmc3k, reduction = "pca", dims = c(2, 3)) +
+    ggtitle("Seurat: PC2 vs PC3") +
+    theme(plot.title = element_text(face = "bold", size = 12))
 
-  p_combined <- p_pc12 + p_pc23 +
+  p_badran_pc12 <- BadranSeq::do_PcaPlot(pbmc3k, dims = c(1, 2)) +
+    ggtitle("BadranSeq: PC1 vs PC2")
+
+  p_badran_pc23 <- BadranSeq::do_PcaPlot(pbmc3k, dims = c(2, 3)) +
+    ggtitle("BadranSeq: PC2 vs PC3")
+
+  p_combined <- (p_seurat_pc12 + p_seurat_pc23) / (p_badran_pc12 + p_badran_pc23) +
     plot_annotation(
-      title = "PCA with Automatic Variance Labels",
-      theme = theme(plot.title = element_text(face = "bold", size = 16, hjust = 0.5))
+      title = "PCA Comparison",
+      subtitle = "Seurat (top) omits variance explained; BadranSeq (bottom) annotates axes automatically",
+      theme = theme(
+        plot.title = element_text(face = "bold", size = 16, hjust = 0.5),
+        plot.subtitle = element_text(size = 11, hjust = 0.5, colour = "grey40")
+      )
     )
 
-  save_plot("fig2_pca_variance.svg", p_combined, 14, 7)
+  save_plot("fig2_pca_variance.svg", p_combined, 14, 10)
 }
 
 figure_3 <- function() {
@@ -216,7 +212,7 @@ figure_6 <- function() {
       )
     )
 
-  save_plot("fig6_stats_violin.svg", p_combined, 14, 8)
+  save_plot("fig6_stats_violin.svg", p_combined, 14, 14)
 }
 
 figure_7 <- function() {
@@ -259,7 +255,7 @@ figure_8 <- function() {
       plot.margin = margin(20, 20, 20, 20)
     )
 
-  save_plot("fig8_dependency_comparison.png", p_deps, 10, 5)
+  save_plot("fig8_dependency_comparison.svg", p_deps, 10, 5)
 }
 
 figures <- list(

@@ -25,22 +25,21 @@ Figures are saved to `../write/figures/` and referenced by `paper.qmd` via `badr
 
 | Figure | File | Description |
 |---------------------|------------------|----------------------------------|
-| 1 | `fig1_comparison.svg` | Comprehensive UMAP comparison (2×2) |
-| 2 | `fig2_pca_variance.svg` | PCA with automatic variance labels |
+| 1 | `fig1_comparison.svg` | UMAP default comparison (vertical) |
+| 2 | `fig2_pca_variance.svg` | PCA comparison (Seurat vs BadranSeq) |
 | 3 | `fig3_split_silhouette.svg` | Split-panel context preservation comparison |
 | 4 | `fig4_featureplot.svg` | Feature expression comparison (2×3) |
 | 5 | `fig5_elbow_colors.svg` | Elbow plot comparison (vertical) |
 | 6 | `fig6_stats_violin.svg` | Statistical violin comparison (side-by-side) |
 | 7 | `fig7_sankey.svg` | Sankey/alluvial diagram for metadata relationships |
-| 8 | `fig8_dependency_comparison.png` | Dependency footprint comparison (bar chart) |
+| 8 | `fig8_dependency_comparison.svg` | Dependency footprint comparison (bar chart) |
 
-## Figure 1: Comprehensive UMAP Comparison
+## Figure 1: UMAP Default Comparison
 
-This figure demonstrates the visual differences between Seurat's `DimPlot()` and BadranSeq's `do_UmapPlot()` across default and enhanced configurations.
+This figure compares default UMAP output from Seurat and BadranSeq.
 
-- **Top row**: Seurat outputs — basic exploratory plots lacking publication features
-- **Bottom row**: BadranSeq outputs — publication-ready with automatic styling
-- **Columns**: Default settings (left) vs enhanced configurations (right)
+- **Top panel**: Seurat default output for exploratory visualisation
+- **Bottom panel**: BadranSeq default output with publication-oriented styling
 
 ```{r}
 #| label: fig1-comparison
@@ -55,29 +54,18 @@ library(patchwork)
 data(pbmc3k)
 
 # Processing ----------
-# Seurat plots (top row)
 p_seurat_default <- Seurat::DimPlot(pbmc3k, reduction = "umap") +
   ggtitle("Seurat: Default") +
   theme(plot.title = element_text(face = "bold", size = 12))
 
-p_seurat_labels <- Seurat::DimPlot(pbmc3k, reduction = "umap", label = TRUE) +
-  ggtitle("Seurat: With Labels") +
-  theme(plot.title = element_text(face = "bold", size = 12))
-
-# BadranSeq plots (bottom row)
 p_badran_default <- BadranSeq::do_UmapPlot(pbmc3k) +
   ggtitle("BadranSeq: Default") +
   theme(plot.title = element_text(face = "bold", size = 12))
 
-p_badran_enhanced <- BadranSeq::do_UmapPlot(pbmc3k, label = TRUE, plot_cell_borders = TRUE) +
-  ggtitle("BadranSeq: Enhanced") +
-  theme(plot.title = element_text(face = "bold", size = 12))
-
-# Patchwork layout: 2 rows x 2 columns
-p_combined <- (p_seurat_default + p_seurat_labels) / (p_badran_default + p_badran_enhanced) +
+p_combined <- p_seurat_default / p_badran_default +
   plot_annotation(
-    title = "UMAP Visualisation Comparison",
-    subtitle = "Seurat (top) requires manual styling for publication; BadranSeq (bottom) produces publication-ready output by default",
+    title = "UMAP Default Comparison",
+    subtitle = "Seurat (top) produces exploratory output; BadranSeq (bottom) renders publication-ready styling by default",
     theme = theme(
       plot.title = element_text(face = "bold", size = 16, hjust = 0.5),
       plot.subtitle = element_text(size = 11, hjust = 0.5, colour = "grey40")
@@ -88,20 +76,18 @@ p_combined <- (p_seurat_default + p_seurat_labels) / (p_badran_default + p_badra
 ggsave(
   "../write/figures/fig1_comparison.svg",
   p_combined,
-  width = 14,
+  width = 16,
   height = 10,
   bg = "white"
 )
 ```
 
-## PCA with Variance Labels
+## Figure 2: PCA Comparison
 
-This figure showcases BadranSeq's automatic variance-explained annotation on PCA axes — a feature absent from Seurat's default plotting.
+This figure contrasts Seurat's default PCA visualisation with BadranSeq's automatic variance annotation.
 
-- **Left panel**: PC1 vs PC2 with variance percentages
-- **Right panel**: PC2 vs PC3 with variance percentages
-- **Key feature**: Axis labels automatically formatted as "PC1 (X.X%)"
-- **Rationale**: Variance explained is essential context for interpreting PCA plots, yet Seurat requires manual calculation and annotation
+- **Top row**: Seurat PCA plots with default axis labels
+- **Bottom row**: BadranSeq PCA plots with variance explained annotated on axes
 
 ```{r}
 #| label: fig2-pca-variance
@@ -118,17 +104,28 @@ library(patchwork)
 data(pbmc3k)
 
 # Processing ----------
+p_seurat_pc12 <- Seurat::DimPlot(pbmc3k, reduction = "pca", dims = c(1, 2)) +
+  ggtitle("Seurat: PC1 vs PC2") +
+  theme(plot.title = element_text(face = "bold", size = 12))
 
-p_pc12 <- BadranSeq::do_PcaPlot(pbmc3k, dims = c(1, 2)) +
-  ggtitle("PC1 vs PC2")
+p_seurat_pc23 <- Seurat::DimPlot(pbmc3k, reduction = "pca", dims = c(2, 3)) +
+  ggtitle("Seurat: PC2 vs PC3") +
+  theme(plot.title = element_text(face = "bold", size = 12))
 
-p_pc23 <- BadranSeq::do_PcaPlot(pbmc3k, dims = c(2, 3)) +
-  ggtitle("PC2 vs PC3")
+p_badran_pc12 <- BadranSeq::do_PcaPlot(pbmc3k, dims = c(1, 2)) +
+  ggtitle("BadranSeq: PC1 vs PC2")
 
-p_combined <- p_pc12 + p_pc23 +
+p_badran_pc23 <- BadranSeq::do_PcaPlot(pbmc3k, dims = c(2, 3)) +
+  ggtitle("BadranSeq: PC2 vs PC3")
+
+p_combined <- (p_seurat_pc12 + p_seurat_pc23) / (p_badran_pc12 + p_badran_pc23) +
   plot_annotation(
-    title = "PCA with Automatic Variance Labels",
-    theme = theme(plot.title = element_text(face = "bold", size = 16, hjust = 0.5))
+    title = "PCA Comparison",
+    subtitle = "Seurat (top) omits variance explained; BadranSeq (bottom) annotates axes automatically",
+    theme = theme(
+      plot.title = element_text(face = "bold", size = 16, hjust = 0.5),
+      plot.subtitle = element_text(size = 11, hjust = 0.5, colour = "grey40")
+    )
   )
 
 # Outputs ----------
@@ -136,7 +133,10 @@ p_combined <- p_pc12 + p_pc23 +
 ggsave(
   "../write/figures/fig2_pca_variance.svg",
   p_combined,
-  width = 14, height = 7)
+  width = 14,
+  height = 10,
+  bg = "white"
+)
 ```
 
 ## Figure 3: Split-Panel Context Preservation Comparison
@@ -379,7 +379,7 @@ ggsave(
   "../write/figures/fig6_stats_violin.svg",
   p_combined,
   width = 14,
-  height = 8,
+  height = 14,
   bg = "white"
 )
 ```
@@ -482,7 +482,7 @@ p_deps <- ggplot(
 
 # Outputs ----------
 ggsave(
-  "../write/figures/fig8_dependency_comparison.png",
+  "../write/figures/fig8_dependency_comparison.svg",
   p_deps,
   width = 10,
   height = 5,
