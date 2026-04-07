@@ -207,47 +207,72 @@ ggsave(
 )
 ```
 
-## Feature Expression Overlay
+## Figure 4: Feature Expression Comparison
 
-This figure demonstrates `do_FeaturePlot()` with viridis colour scales for
-gene expression visualisation.
+This figure compares gene expression visualisation between Seurat's
+`FeaturePlot()` and BadranSeq's `do_FeaturePlot()`.
 
-- **Genes selected**: CD3D (T-cell marker), CD8A (cytotoxic T-cell marker),
-  CD14 (monocyte marker)
-  - These canonical markers span major PBMC populations
-- **Colour scale**: Viridis "B" palette (mako), reversed direction
-  - Perceptually uniform, colourblind-friendly
-- **Cell borders**: Black borders improve legibility in dense regions
+- **Top row**: Seurat's default FeaturePlot — basic colour scales, no cell borders
+- **Bottom row**: BadranSeq's do_FeaturePlot — viridis scales, cell borders,
+  publication-ready styling
+- **Genes**: CD3D (T cells), CD8A (cytotoxic T cells), CD14 (monocytes)
 
 ```{r}
 #| label: fig4-featureplot
 
 # Libraries ----------
-
 library(BadranSeq)
 library(Seurat)
 library(ggplot2)
 library(patchwork)
 
 # Inputs ----------
-
 data(pbmc3k)
 
 # Processing ----------
-
-p_features <- BadranSeq::do_FeaturePlot(
+# Seurat feature plots (top row)
+p_seurat_features <- Seurat::FeaturePlot(
   pbmc3k,
   features = c("CD3D", "CD8A", "CD14"),
   reduction = "umap",
   ncol = 3
-)
+) +
+  plot_annotation(
+    title = "Seurat: FeaturePlot()",
+    theme = theme(plot.title = element_text(face = "bold", size = 12))
+  )
+
+# BadranSeq feature plots (bottom row)
+p_badran_features <- BadranSeq::do_FeaturePlot(
+  pbmc3k,
+  features = c("CD3D", "CD8A", "CD14"),
+  reduction = "umap",
+  ncol = 3
+) +
+  plot_annotation(
+    title = "BadranSeq: do_FeaturePlot()",
+    theme = theme(plot.title = element_text(face = "bold", size = 12))
+  )
+
+# Combine: Seurat on top, BadranSeq below
+p_combined <- p_seurat_features / p_badran_features +
+  plot_annotation(
+    title = "Feature Expression Visualisation Comparison",
+    subtitle = "Seurat (top) uses default colour scales. BadranSeq (bottom) applies viridis scales, cell borders for legibility, and consistent publication styling.",
+    theme = theme(
+      plot.title = element_text(face = "bold", size = 16, hjust = 0.5),
+      plot.subtitle = element_text(size = 11, hjust = 0.5, colour = "grey40")
+    )
+  )
 
 # Outputs ----------
-
 ggsave(
   "../write/figures/fig4_featureplot.svg",
-  p_features,
-  width = 14, height = 5)
+  p_combined,
+  width = 14,
+  height = 10,
+  bg = "white"
+)
 ```
 
 ## Elbow Plot and Colour Palette
