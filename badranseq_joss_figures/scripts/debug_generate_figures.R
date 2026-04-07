@@ -214,7 +214,7 @@ figure_6 <- function() {
       )
     )
 
-  save_plot("fig6_stats_violin.svg", p_combined, 14, 14)
+  save_plot("fig6_stats_violin.svg", p_combined, 14, 17)
 }
 
 figure_7 <- function() {
