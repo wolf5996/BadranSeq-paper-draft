@@ -572,4 +572,230 @@ BadranSeq differs by providing a lighter-weight, native ggplot2 implementation w
 
 The author thanks the developers of R [@rcore2024], Seurat [@hao2024], ggplot2 [@wickham2016], ggstatsplot [@patil2021], ggalluvial [@brunson2020], and UMAP [@mcinnes2018] for the foundational tools upon which BadranSeq is built.
 
+## Appendix A: Code Efficiency Comparisons
+
+This appendix presents side-by-side code comparisons demonstrating the efficiency gains of BadranSeq over standard Seurat workflows. Each example shows the manual customisation required to achieve publication-ready output versus the single-function-call approach enabled by BadranSeq's sensible defaults.
+
+### A.1 UMAP Visualisation
+
+**Seurat approach:** Basic exploratory plot requiring extensive manual styling.
+
+```r
+# Basic plot - lacks publication features
+p <- DimPlot(seurat_obj, reduction = "umap")
+
+# Required manual additions for publication quality:
+p <- DimPlot(seurat_obj, reduction = "umap") +
+  theme_minimal() +                                    # Clean theme
+  theme(
+    panel.grid = element_blank(),                     # Remove grid
+    axis.text = element_text(size = 10),             # Consistent text
+    legend.position = "bottom"                        # Position legend
+  ) +
+  scale_color_manual(values = custom_palette) +       # Accessible colours
+  # Additional code for cell borders, label positioning, etc.
+```
+
+**BadranSeq approach:** Publication-ready output with automatic styling.
+
+```r
+# Single function call produces publication-ready output
+p <- do_UmapPlot(seurat_obj)
+# Automatic: theme_badranseq(), cell borders, label placement, 
+# perceptually uniform palette, optimised text sizing
+```
+
+**Efficiency gain:** One function call replaces 10-15 lines of manual customisation, with consistent defaults across all analyses.
+
+### A.2 PCA with Variance Annotation
+
+**Seurat approach:** Manual variance extraction and axis labelling.
+
+```r
+# Extract variance information manually
+pca_var <- (seurat_obj@reductions$pca@stdev)^2
+pca_percent <- round(100 * pca_var / sum(pca_var), 1)
+
+# Create plot with manual axis labels
+p <- DimPlot(seurat_obj, reduction = "pca") +
+  xlab(paste0("PC1 (", pca_percent[1], "%)")) +
+  ylab(paste0("PC2 (", pca_percent[2], "%)")) +
+  theme_minimal() +
+  theme(panel.grid = element_blank())
+
+# Must repeat for each PC combination
+```
+
+**BadranSeq approach:** Automatic variance annotation for any PC combination.
+
+```r
+# Automatic variance annotation
+p <- do_PcaPlot(seurat_obj, dims = c(1, 2))
+# Automatic: variance extraction, percentage calculation, 
+# formatted axis labels, publication theme
+```
+
+**Efficiency gain:** Eliminates manual `@reductions` slot access, variance calculation, and label formatting. Consistent across all PC combinations.
+
+### A.3 Feature Expression Visualisation
+
+**Seurat approach:** Basic feature plot with default colour scale.
+
+```r
+# Default plot with problematic colour scale
+p <- FeaturePlot(seurat_obj, features = c("CD3D", "CD8A", "CD14"))
+
+# Required additions for publication quality:
+p <- FeaturePlot(
+  seurat_obj, 
+  features = c("CD3D", "CD8A", "CD14"),
+  cols = viridis(100),                    # Perceptually uniform scale
+  pt.size = 0.5,                          # Adjust point size
+  order = TRUE                            # Order by expression
+) +
+  theme_minimal() +
+  theme(panel.grid = element_blank())
+# Additional code needed for cell borders, outlier handling
+```
+
+**BadranSeq approach:** Optimised feature plots with automatic colour scaling and borders.
+
+```r
+# Automatic viridis scale, cell borders, outlier handling
+p <- do_FeaturePlot(seurat_obj, features = c("CD3D", "CD8A", "CD14"))
+
+# With quantile cutoffs for outlier handling
+p <- do_FeaturePlot(
+  seurat_obj, 
+  features = c("CD3D", "CD8A", "CD14"),
+  min.cutoff = "q10", 
+  max.cutoff = "q90"
+)
+```
+
+**Efficiency gain:** Single call replaces manual colour scale selection, cell border addition, and outlier threshold configuration.
+
+### A.4 Split-Panel Comparisons
+
+**Seurat approach:** Standard faceting loses spatial context.
+
+```r
+# Default split.by faceting - each panel shows only subset
+p <- DimPlot(seurat_obj, reduction = "umap", split.by = "condition")
+# Result: panels lack context of full embedding geometry
+```
+
+**BadranSeq approach:** Silhouette method preserves spatial context.
+
+```r
+# Silhouette approach shows all cells in background
+p <- do_UmapPlot(seurat_obj, split.by = "condition")
+# Automatic: grey silhouettes of all cells, coloured overlay 
+# for target condition, preserved spatial relationships
+```
+
+**Efficiency gain:** Single parameter enables sophisticated visualisation technique that would require complex manual ggplot2 construction in standard workflow.
+
+### A.5 Statistical Violin Plots
+
+**Seurat approach:** Basic violin plot without statistical testing.
+
+```r
+# Basic violin plot - no statistics
+p <- VlnPlot(
+  seurat_obj, 
+  features = "CD3D",
+  group.by = "seurat_annotations",
+  pt.size = 0
+)
+
+# Manual statistical workflow required:
+# 1. Extract expression data with FetchData()
+# 2. Wrangle into appropriate format
+# 3. Perform Kruskal-Wallis test
+# 4. Run Dunn's pairwise comparisons
+# 5. Format results for plotting
+# 6. Add annotations manually
+```
+
+**BadranSeq approach:** Integrated statistical testing with automatic annotation.
+
+```r
+# Automatic Kruskal-Wallis and Dunn's pairwise comparisons
+p <- do_StatsViolinPlot(
+  seurat_obj,
+  features = "CD3D",
+  group.by = "seurat_annotations",
+  group.levels = c("Naive CD4 T", "Memory CD4 T", "CD8 T")
+)
+# Automatic: data extraction, statistical testing, 
+# multiple comparison correction, formatted annotations
+```
+
+**Efficiency gain:** Single function replaces complete statistical workflow (extraction, testing, formatting) with appropriate non-parametric tests and publication-ready annotation.
+
+### A.6 Variance Diagnostics
+
+**Seurat approach:** Basic elbow plot requiring manual interpretation.
+
+```r
+# Standard deviation plot - requires manual variance calculation
+p <- ElbowPlot(seurat_obj, ndims = 30)
+
+# Manual variance extraction for context
+pca_var <- (seurat_obj@reductions$pca@stdev)^2
+variance_explained <- round(100 * pca_var / sum(pca_var), 1)
+# Must manually identify "elbow" and document decision
+```
+
+**BadranSeq approach:** Variance-explained plot with optional cutoff annotation.
+
+```r
+# Variance explained with annotated cutoff
+p <- EnhancedElbowPlot(seurat_obj, ndims = 30, cutoff_pc = 15)
+# Automatic: standard deviation to variance conversion, 
+# percentage calculation, cutoff overlay for methods documentation
+
+# Programmatic access to variance data
+variance_df <- get_pca_variance(seurat_obj)
+```
+
+**Efficiency gain:** Automatic variance conversion and cutoff annotation eliminate manual calculation and provide clear visual documentation of PC selection decisions.
+
+### A.7 Data Extraction
+
+**Seurat approach:** Mixed return structure with trapped rownames.
+
+```r
+# FetchData returns data.frame with barcodes in rownames
+expr_data <- FetchData(
+  seurat_obj, 
+  vars = c("CD3D", "UMAP_1", "UMAP_2", "seurat_annotations")
+)
+# Requires: rownames_to_column(), manual reshaping for tidyverse
+```
+
+**BadranSeq approach:** Tidy tibble with explicit identifiers.
+
+```r
+# Tidy extraction with explicit cell_id column
+cell_data <- fetch_cell_data(
+  seurat_obj,
+  embeddings = "umap",
+  metadata_cols = "seurat_annotations"
+)
+# Returns: tidy tibble ready for dplyr/ggplot2 pipelines
+
+# Expression data in long format
+expr_long <- fetch_feature_data(
+  seurat_obj,
+  features = c("CD3D", "CD8A", "CD14"),
+  layers = c("counts", "data")
+)
+# Returns: one row per cell-feature combination, 
+# explicit layer columns, ready for analysis
+```
+
+**Efficiency gain:** Tidy data structures eliminate preprocessing steps and enable direct integration with modern R analytical workflows.
+
 ## References
