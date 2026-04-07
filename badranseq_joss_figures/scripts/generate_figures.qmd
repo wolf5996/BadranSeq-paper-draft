@@ -12,35 +12,31 @@ format:
     embed-resources: true
 engine: knitr
 execute:
-  eval: true
+  eval: false
   warning: false
   message: false
 ---
 
 ## Overview
 
-This script generates all figures for the BadranSeq JOSS paper using the
-bundled `pbmc3k` dataset. Each section is self-contained and produces a
-single publication-ready SVG vector graphic.
+This script generates all figures for the BadranSeq JOSS paper using the bundled `pbmc3k` dataset. Each section is self-contained and produces a single publication-ready SVG vector graphic.
 
-Figures are saved to `../write/figures/` and referenced by `paper.qmd` via
-`badranseq_joss_figures/write/figures/`.
+Figures are saved to `../write/figures/` and referenced by `paper.qmd` via `badranseq_joss_figures/write/figures/`.
 
 | Figure | File | Description |
-|--------|------|-------------|
+|---------------------|------------------|----------------------------------|
 | 1 | `fig1_comparison.svg` | Comprehensive UMAP comparison (2×2) |
 | 2 | `fig2_pca_variance.svg` | PCA with automatic variance labels |
 | 3 | `fig3_split_silhouette.svg` | Split-panel context preservation comparison |
 | 4 | `fig4_featureplot.svg` | Feature expression comparison (2×3) |
-| 5 | `fig5_elbow_colors.svg` | Elbow plot with cutoff + colour palette |
+| 5 | `fig5_elbow_colors.svg` | Elbow plot comparison (vertical) |
 | 6 | `fig6_stats_violin.svg` | Statistical violin comparison (side-by-side) |
 | 7 | `fig7_sankey.svg` | Sankey/alluvial diagram for metadata relationships |
-| 8 | `fig8_dependency_comparison.svg` | Dependency footprint comparison (bar chart) |
+| 8 | `fig8_dependency_comparison.png` | Dependency footprint comparison (bar chart) |
 
 ## Figure 1: Comprehensive UMAP Comparison
 
-This figure demonstrates the visual differences between Seurat's `DimPlot()`
-and BadranSeq's `do_UmapPlot()` across default and enhanced configurations.
+This figure demonstrates the visual differences between Seurat's `DimPlot()` and BadranSeq's `do_UmapPlot()` across default and enhanced configurations.
 
 - **Top row**: Seurat outputs — basic exploratory plots lacking publication features
 - **Bottom row**: BadranSeq outputs — publication-ready with automatic styling
@@ -100,14 +96,12 @@ ggsave(
 
 ## PCA with Variance Labels
 
-This figure showcases BadranSeq's automatic variance-explained annotation on
-PCA axes — a feature absent from Seurat's default plotting.
+This figure showcases BadranSeq's automatic variance-explained annotation on PCA axes — a feature absent from Seurat's default plotting.
 
 - **Left panel**: PC1 vs PC2 with variance percentages
 - **Right panel**: PC2 vs PC3 with variance percentages
 - **Key feature**: Axis labels automatically formatted as "PC1 (X.X%)"
-- **Rationale**: Variance explained is essential context for interpreting PCA
-  plots, yet Seurat requires manual calculation and annotation
+- **Rationale**: Variance explained is essential context for interpreting PCA plots, yet Seurat requires manual calculation and annotation
 
 ```{r}
 #| label: fig2-pca-variance
@@ -147,13 +141,10 @@ ggsave(
 
 ## Figure 3: Split-Panel Context Preservation Comparison
 
-This figure demonstrates how Seurat's default faceting destroys spatial context
-while BadranSeq's silhouette approach preserves it across split panels.
+This figure demonstrates how Seurat's default faceting destroys spatial context while BadranSeq's silhouette approach preserves it across split panels.
 
-- **Top row**: Seurat's `split.by` faceting — each panel shows only its subset,
-  losing embedding geometry context
-- **Bottom row**: BadranSeq's silhouette approach — grey background shows all cells,
-  coloured overlay shows target subset, preserving spatial relationships
+- **Top row**: Seurat's `split.by` faceting — each panel shows only its subset, losing embedding geometry context
+- **Bottom row**: BadranSeq's silhouette approach — grey background shows all cells, coloured overlay shows target subset, preserving spatial relationships
 
 ```{r}
 #| label: fig3-split-silhouette
@@ -210,12 +201,10 @@ ggsave(
 
 ## Figure 4: Feature Expression Comparison
 
-This figure compares gene expression visualisation between Seurat's
-`FeaturePlot()` and BadranSeq's `do_FeaturePlot()`.
+This figure compares gene expression visualisation between Seurat's `FeaturePlot()` and BadranSeq's `do_FeaturePlot()`.
 
 - **Top row**: Seurat's default FeaturePlot — basic colour scales, no cell borders
-- **Bottom row**: BadranSeq's do_FeaturePlot — viridis scales, cell borders,
-  publication-ready styling
+- **Bottom row**: BadranSeq's do_FeaturePlot — viridis scales, cell borders, publication-ready styling
 - **Genes**: CD3D (T cells), CD8A (cytotoxic T cells), CD14 (monocytes)
 
 ```{r}
@@ -276,17 +265,12 @@ ggsave(
 )
 ```
 
-## Elbow Plot and Colour Palette
+## Figure 5: Elbow Plot Comparison
 
-This figure combines two utility outputs: the enhanced elbow plot with cutoff
-annotation, and a demonstration of the BadranSeq colour palette.
+This figure compares Seurat's `ElbowPlot()` with BadranSeq's `EnhancedElbowPlot()`.
 
-- **Left panel**: `EnhancedElbowPlot()` with `cutoff_pc = 10`
-  - Red dashed line marks the chosen dimensionality
-  - Variance explained (%) on y-axis rather than raw standard deviation
-- **Right panel**: Colour palette from `generate_badranseq_colors(10)`
-  - Visualised as a bar chart showing the categorical colour scheme
-  - Dark 3 qualitative palette with saturation/value adjustments
+- **Top panel**: Seurat's default elbow plot showing standard deviation by principal component
+- **Bottom panel**: BadranSeq's enhanced elbow plot showing variance explained with an annotated cutoff
 
 ```{r}
 #| label: fig5-elbow-colors
@@ -303,34 +287,22 @@ library(patchwork)
 data(pbmc3k)
 
 # Processing ----------
+p_seurat_elbow <- Seurat::ElbowPlot(pbmc3k, ndims = 30) +
+  ggtitle("Seurat: ElbowPlot()") +
+  theme(plot.title = element_text(face = "bold", size = 12))
 
-p_elbow <- BadranSeq::EnhancedElbowPlot(pbmc3k, ndims = 30, cutoff_pc = 10)
+p_badran_elbow <- BadranSeq::EnhancedElbowPlot(pbmc3k, ndims = 30, cutoff_pc = 10) +
+  ggtitle("BadranSeq: EnhancedElbowPlot()") +
+  theme(plot.title = element_text(face = "bold", size = 12))
 
-colors <- BadranSeq::generate_badranseq_colors(10)
-color_df <- data.frame(
-  Cluster = factor(paste0("C", 0:9), levels = paste0("C", 0:9)),
-  Value = 1
-)
-
-p_palette <- ggplot(color_df, aes(x = Cluster, y = Value, fill = Cluster)) +
-  geom_col(width = 0.8, show.legend = FALSE) +
-  scale_fill_manual(values = setNames(colors, levels(color_df$Cluster))) +
-  labs(title = "BadranSeq Colour Palette", x = NULL, y = NULL) +
-  theme_minimal(base_size = 14) +
-  theme(
-    plot.title = element_text(face = "bold", hjust = 0.5),
-    axis.text.y = element_blank(),
-    axis.ticks.y = element_blank(),
-    panel.grid = element_blank(),
-    plot.background = element_rect(fill = "white", color = NA),
-    panel.background = element_rect(fill = "white", color = NA)
-  )
-
-p_combined <- p_elbow + p_palette +
-  plot_layout(widths = c(2, 1)) +
+p_combined <- p_seurat_elbow / p_badran_elbow +
   plot_annotation(
-    title = "Variance Diagnostics and Colour Palette",
-    theme = theme(plot.title = element_text(face = "bold", size = 16, hjust = 0.5))
+    title = "Elbow Plot Comparison",
+    subtitle = "Seurat (top) shows standard deviation by principal component. BadranSeq (bottom) adds variance explained and a cutoff annotation.",
+    theme = theme(
+      plot.title = element_text(face = "bold", size = 16, hjust = 0.5),
+      plot.subtitle = element_text(size = 11, hjust = 0.5, colour = "grey40")
+    )
   )
 
 # Outputs ----------
@@ -338,18 +310,18 @@ p_combined <- p_elbow + p_palette +
 ggsave(
   "../write/figures/fig5_elbow_colors.svg",
   p_combined,
-  width = 14, height = 5)
+  width = 10,
+  height = 10,
+  bg = "white"
+)
 ```
 
 ## Figure 6: Statistical Violin Comparison
 
-This figure compares distribution visualisation between Seurat's `VlnPlot()`
-and BadranSeq's `do_StatsViolinPlot()`, highlighting the integrated statistical
-testing capabilities.
+This figure compares distribution visualisation between Seurat's `VlnPlot()` and BadranSeq's `do_StatsViolinPlot()`, highlighting the integrated statistical testing capabilities.
 
 - **Left**: Seurat's VlnPlot — basic violin without statistical annotation
-- **Right**: BadranSeq's do_StatsViolinPlot — automatic Kruskal–Wallis test
-  and Dunn's pairwise comparisons
+- **Right**: BadranSeq's do_StatsViolinPlot — automatic Kruskal–Wallis test and Dunn's pairwise comparisons
 
 ```{r}
 #| label: fig6-stats-violin
@@ -364,9 +336,16 @@ library(patchwork)
 data(pbmc3k)
 
 # Processing ----------
+selected_annotations <- c("Naive CD4 T", "Memory CD4 T", "CD8 T")
+pbmc3k_subset <- subset(pbmc3k, subset = seurat_annotations %in% selected_annotations)
+pbmc3k_subset$seurat_annotations <- factor(
+  pbmc3k_subset$seurat_annotations,
+  levels = selected_annotations
+)
+
 # Seurat violin (left) - no statistics
 p_seurat_vln <- Seurat::VlnPlot(
-  pbmc3k,
+  pbmc3k_subset,
   features = "CD3D",
   group.by = "seurat_annotations",
   pt.size = 0
@@ -379,7 +358,7 @@ p_badran_vln <- BadranSeq::do_StatsViolinPlot(
   pbmc3k,
   features = "CD3D",
   group.by = "seurat_annotations",
-  group.levels = c("Naive CD4 T", "Memory CD4 T", "CD8 T")
+  group.levels = selected_annotations
 ) +
   ggtitle("BadranSeq: do_StatsViolinPlot()") +
   theme(plot.title = element_text(face = "bold", size = 12))
@@ -400,19 +379,17 @@ ggsave(
   "../write/figures/fig6_stats_violin.svg",
   p_combined,
   width = 14,
-  height = 6,
+  height = 8,
   bg = "white"
 )
 ```
 
 ## Sankey / Alluvial Diagram
 
-This figure demonstrates `do_SankeyPlot()` showing the relationship between
-cluster assignments and biological cell type annotations.
+This figure demonstrates `do_SankeyPlot()` showing the relationship between cluster assignments and biological cell type annotations.
 
 - **Columns**: `seurat_clusters` → `seurat_annotations`
-- **Key feature**: Each stratum is labelled and coloured; flows show how cells
-  distribute across categories
+- **Key feature**: Each stratum is labelled and coloured; flows show how cells distribute across categories
 - **Use case**: Quickly assess whether clusters map cleanly to cell types
 
 ```{r}
@@ -444,13 +421,11 @@ ggsave(
 
 ## Figure 8: Dependency Footprint Comparison
 
-This figure quantifies the dependency burden difference between BadranSeq and
-SCpubr, illustrating the trade-off between functionality and maintenance overhead.
+This figure quantifies the dependency burden difference between BadranSeq and SCpubr, illustrating the trade-off between functionality and maintenance overhead.
 
 - **BadranSeq**: 19 direct dependencies (minimal footprint)
 - **SCpubr**: 56 direct dependencies (broad functionality)
-- **Implication**: Reduced installation time, fewer version conflicts, lower
-  long-term maintenance burden
+- **Implication**: Reduced installation time, fewer version conflicts, lower long-term maintenance burden
 
 ```{r}
 #| label: fig8-dependency-comparison
@@ -507,7 +482,7 @@ p_deps <- ggplot(
 
 # Outputs ----------
 ggsave(
-  "../write/figures/fig8_dependency_comparison.svg",
+  "../write/figures/fig8_dependency_comparison.png",
   p_deps,
   width = 10,
   height = 5,

@@ -220,7 +220,7 @@ A shared theme function, `theme_badranseq()`, enforces consistent aesthetics acr
 The theme is exported for use on arbitrary ggplot2 objects, enabling visual consistency across an entire manuscript.
 Colour generation uses the colorspace Dark 3 qualitative palette [@zeileis2020] with saturation increased by 0.2 and value decreased by 0.1 in HSV space, yielding vivid yet distinguishable categorical colours (@fig-elbow).
 
-![Left: `EnhancedElbowPlot()` showing variance explained per PC with a cutoff at PC 10. Right: the categorical palette from `generate_badranseq_colors()`, derived from the colorspace Dark 3 palette with HSV adjustments.](badranseq_joss_figures/write/figures/fig5_elbow_colors.svg){#fig-elbow width="100%"}
+![Elbow plot comparison. Top: Seurat's default `ElbowPlot()` showing standard deviation by principal component. Bottom: BadranSeq's `EnhancedElbowPlot()` showing variance explained with an annotated cutoff.](badranseq_joss_figures/write/figures/fig5_elbow_colors.svg){#fig-elbow width="80%"}
 
 ### Split-Panel Silhouette Visualisation
 
@@ -236,7 +236,7 @@ Panels are combined using patchwork with shared legends and consistent axis limi
 By default, a Kruskal--Wallis omnibus test and Dunn's pairwise comparisons (Holm-corrected) are performed and annotated directly on the plot.
 The `pairwise.display` argument controls whether all pairs, only significant pairs, or no brackets are shown (@fig-violin).
 
-![Statistical violin comparison showing Seurat's VlnPlot() (left) versus BadranSeq's do_StatsViolinPlot() (right). Seurat displays expression distributions without statistical annotation. BadranSeq integrates Kruskal--Wallis omnibus testing and Dunn's pairwise comparisons with automatic formatting, enabling immediate statistical interpretation without manual post-processing.](badranseq_joss_figures/write/figures/fig6_stats_violin.svg){#fig-violin width="100%"}
+![Statistical violin comparison on a matched subset (Naive CD4 T, Memory CD4 T, and CD8 T cells). Left: Seurat's `VlnPlot()` shows expression distributions without statistical annotation. Right: BadranSeq's `do_StatsViolinPlot()` integrates Kruskal--Wallis omnibus testing and Dunn's pairwise comparisons with automatic formatting, enabling immediate interpretation.](badranseq_joss_figures/write/figures/fig6_stats_violin.svg){#fig-violin width="90%"}
 
 ### Sankey Diagrams
 
