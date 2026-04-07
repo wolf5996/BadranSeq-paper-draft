@@ -153,7 +153,8 @@ This work is repeated across every analysis, every manuscript, and every laborat
 
 The cost is not merely time.
 Inconsistent visualisation code across projects hinders reproducibility of visual outputs and introduces opportunities for error.
-SCpubr [@blancocarmona2022] addressed this gap with a large suite of specialised plotting functions, but its breadth introduces a correspondingly large dependency footprint --- often more than is justified when only core dimensionality reduction and feature plots are needed.
+SCpubr [@blancocarmona2022] addressed this gap with a large suite of specialised plotting functions, but its breadth introduces a substantial dependency burden: 56 direct dependencies compared to 19 for BadranSeq (@fig-dependency).
+This 66\% reduction in dependency footprint translates to faster installation, fewer version conflicts, and reduced long-term maintenance overhead---particularly important when only core dimensionality reduction and feature plots are needed.
 
 Three additional gaps remain underserved.
 First, interactive cell selection: researchers frequently need to isolate spatially defined populations that do not correspond to existing metadata labels.
