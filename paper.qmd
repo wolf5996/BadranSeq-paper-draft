@@ -168,16 +168,16 @@ By building directly on ggplot2 rather than wrapping higher-level abstractions, 
 
 ## State of the Field
 
-Several tools address scRNA-seq visualisation in R.
-Seurat's built-in `DimPlot()` and `FeaturePlot()` [@hao2024] provide basic plotting but require manual styling for publication use.
-SCpubr [@blancocarmona2022] offers over 30 specialised plot types with publication aesthetics, at the cost of a large dependency tree.
+Several tools address scRNA-seq visualisation in R (@fig-comparison, @fig-featureplot, @fig-silhouette, @fig-violin).
+Seurat's built-in `DimPlot()` and `FeaturePlot()` [@hao2024] provide basic plotting but require manual styling for publication use---as demonstrated in the top rows of the comparison figures, Seurat outputs lack cell borders, consistent themes, and statistical annotations.
+SCpubr [@blancocarmona2022] offers over 30 specialised plot types with publication aesthetics, but requires 56 direct dependencies compared to 19 for BadranSeq---a 66\% larger dependency footprint that increases installation time and version conflict risk (@fig-dependency).
 dittoSeq provides colourblind-friendly visualisations with a focus on accessibility.
 scater, part of the Bioconductor ecosystem, includes plotting utilities integrated with the SingleCellExperiment class.
 
 BadranSeq occupies a distinct position.
-Unlike Seurat's defaults, it produces publication-ready output without customisation.
-Unlike SCpubr, it focuses on the core visualisation tasks that researchers use daily, resulting in a minimal dependency footprint.
-Unlike dittoSeq and scater, it operates natively on Seurat objects and integrates directly with the dominant scRNA-seq workflow (@fig-comparison).
+Unlike Seurat's defaults, it produces publication-ready output without customisation, as shown in the bottom rows of the comparison figures.
+Unlike SCpubr, it focuses on the core visualisation tasks that researchers use daily, achieving equivalent publication aesthetics with a 66\% smaller dependency footprint.
+Unlike dittoSeq and scater, it operates natively on Seurat objects and integrates directly with the dominant scRNA-seq workflow.
 
 @tbl-comparison summarises the functional differences.
 
