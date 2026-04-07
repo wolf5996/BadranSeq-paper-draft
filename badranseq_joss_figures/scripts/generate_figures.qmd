@@ -340,45 +340,68 @@ ggsave(
   width = 14, height = 5)
 ```
 
-## Statistical Violin Plots
+## Figure 6: Statistical Violin Comparison
 
-This figure demonstrates `do_StatsViolinPlot()` with automatic statistical
-testing and pairwise comparisons on a subset of cell types.
+This figure compares distribution visualisation between Seurat's `VlnPlot()`
+and BadranSeq's `do_StatsViolinPlot()`, highlighting the integrated statistical
+testing capabilities.
 
-- **Gene**: CD3D (T-cell marker)
-- **Groups**: Naive CD4 T, Memory CD4 T, CD8 T (via `group.levels`)
-- **Statistics**: Kruskal–Wallis omnibus + Dunn's pairwise (default)
-- **Key feature**: Seurat-aware data extraction, automatic colour generation,
-  `group.levels` for comparing specific clusters without manual subsetting
+- **Left**: Seurat's VlnPlot — basic violin without statistical annotation
+- **Right**: BadranSeq's do_StatsViolinPlot — automatic Kruskal–Wallis test
+  and Dunn's pairwise comparisons
 
 ```{r}
 #| label: fig6-stats-violin
 
 # Libraries ----------
-
 library(BadranSeq)
 library(Seurat)
 library(ggplot2)
+library(patchwork)
 
 # Inputs ----------
-
 data(pbmc3k)
 
 # Processing ----------
+# Seurat violin (left) - no statistics
+p_seurat_vln <- Seurat::VlnPlot(
+  pbmc3k,
+  features = "CD3D",
+  group.by = "seurat_annotations",
+  pt.size = 0
+) +
+  ggtitle("Seurat: VlnPlot()") +
+  theme(plot.title = element_text(face = "bold", size = 12))
 
-p_violin <- BadranSeq::do_StatsViolinPlot(
+# BadranSeq violin (right) - with statistics
+p_badran_vln <- BadranSeq::do_StatsViolinPlot(
   pbmc3k,
   features = "CD3D",
   group.by = "seurat_annotations",
   group.levels = c("Naive CD4 T", "Memory CD4 T", "CD8 T")
-)
+) +
+  ggtitle("BadranSeq: do_StatsViolinPlot()") +
+  theme(plot.title = element_text(face = "bold", size = 12))
+
+# Combine side by side
+p_combined <- p_seurat_vln + p_badran_vln +
+  plot_annotation(
+    title = "Distribution Comparison with Statistical Testing",
+    subtitle = "Seurat (left) shows expression distributions. BadranSeq (right) integrates Kruskal–Wallis testing and Dunn's pairwise comparisons with automatic formatting.",
+    theme = theme(
+      plot.title = element_text(face = "bold", size = 16, hjust = 0.5),
+      plot.subtitle = element_text(size = 11, hjust = 0.5, colour = "grey40")
+    )
+  )
 
 # Outputs ----------
-
 ggsave(
   "../write/figures/fig6_stats_violin.svg",
-  p_violin,
-  width = 8, height = 6)
+  p_combined,
+  width = 14,
+  height = 6,
+  bg = "white"
+)
 ```
 
 ## Sankey / Alluvial Diagram
