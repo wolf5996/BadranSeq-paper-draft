@@ -209,29 +209,11 @@ The architecture employs a routing pattern where `do_DimPlot()` serves as a unif
 
 #### UMAP: Publication-Ready Defaults
 
-UMAP embeddings are typically the first figure readers encounter in scRNA-seq publications, making default output quality critical for effective scientific communication.
-The standard Seurat workflow produces functional but visually sparse plots that require extensive manual styling to meet publication standards.
-This creates a reproducibility gap: the code that generates exploratory plots differs substantially from the code that produces the final published figures, complicating both methods sections and computational reproducibility.
+UMAP embeddings typically constitute the first figure readers encounter in scRNA-seq publications, making default output quality critical for effective scientific communication (@fig-comparison). The standard Seurat workflow produces exploratory plots requiring extensive manual styling---theme adjustments, colour palette selection, cell border addition, and label positioning---to meet publication standards. This creates a reproducibility gap between exploratory and final analysis code.
 
-BadranSeq addresses this by implementing publication-oriented defaults in `do_UmapPlot()`.
-The function automatically applies cell borders to improve legibility in high-density regions, positions cluster labels using an intelligent algorithm that avoids overlaps, and applies a carefully tuned categorical colour palette designed for maximum visual distinction.
-The underlying theme removes distracting grid lines, optimises text sizing for publication, and ensures consistent legend positioning across all plot types.
+BadranSeq's `do_UmapPlot()` addresses this through publication-oriented defaults applied automatically. Cell borders improve legibility in high-density regions where overlapping points obscure population boundaries. An intelligent label placement algorithm positions text to avoid occlusion whilst maintaining proximity to cluster centroids. The categorical colour palette emphasises perceptual uniformity and accessibility, with sufficient contrast for distinguishing adjacent populations in print or for readers with colour vision deficiencies. The underlying theme removes distracting grid lines and optimises text sizing consistently across all plot types.
 
-```r
-# Seurat default approach
-p1 <- DimPlot(seurat_obj, reduction = "umap")
-
-# BadranSeq equivalent
-p2 <- do_UmapPlot(seurat_obj)
-```
-
-The code comparison illustrates the efficiency gain: a single `do_UmapPlot()` call produces output that would require multiple manual modifications in Seurat, including theme adjustments, colour palette selection, and border application.
-More importantly, the defaults are consistent across different datasets and cell type compositions, eliminating the need to re-tune parameters for each analysis.
-
-The visual improvements extend beyond aesthetics.
-Cell borders significantly improve readability in dense UMAP regions where overlapping points can obscure population boundaries.
-The automated label placement algorithm positions text to avoid occlusion whilst maintaining proximity to cluster centroids.
-The colour palette selection emphasises perceptual uniformity and accessibility, with sufficient contrast to distinguish adjacent populations even in print or when viewed by readers with colour vision deficiencies.
+These defaults remain consistent across datasets and cell type compositions, eliminating parameter re-tuning for each analysis. The efficiency gain is substantial: a single function call replaces the multiple manual modifications otherwise required to prepare Seurat's `DimPlot()` output for manuscript use. Detailed code comparisons are provided in Appendix A.
 
 ![Default UMAP comparison with Seurat on top and BadranSeq on bottom. Seurat's `DimPlot()` produces exploratory output requiring manual polishing, while BadranSeq's `do_UmapPlot()` provides publication-ready styling by default.](badranseq_joss_figures/write/figures/fig1_comparison.svg){#fig-comparison width="100%"}
 
