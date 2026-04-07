@@ -249,7 +249,7 @@ A common application is visualising how computationally derived clusters corresp
 
 The breadth of functionality in visualisation packages introduces a corresponding dependency burden that affects installation time, version compatibility, and long-term maintenance. BadranSeq maintains a minimal dependency tree with only 19 direct dependencies compared to 56 for SCpubr---a 66\% reduction (@fig-dependency). This streamlined approach reduces the risk of version conflicts, accelerates installation, and lowers the maintenance overhead for users while delivering equivalent publication-ready aesthetics for core visualisation tasks.
 
-![Dependency footprint comparison between BadranSeq and SCpubr. BadranSeq maintains 19 direct dependencies compared to 56 for SCpubr, representing a 66\% reduction in dependency burden. This translates to faster installation, fewer version conflicts, and reduced long-term maintenance overhead while achieving equivalent publication-ready aesthetics.](badranseq_joss_figures/write/figures/fig8_dependency_comparison.svg){#fig-dependency width="80%"}
+![Dependency footprint comparison between BadranSeq and SCpubr. BadranSeq maintains 19 direct dependencies compared to 56 for SCpubr, representing a 66\% reduction in dependency burden. This translates to faster installation, fewer version conflicts, and reduced long-term maintenance overhead while achieving equivalent publication-ready aesthetics.](badranseq_joss_figures/write/figures/fig8_dependency_comparison.png){#fig-dependency width="80%"}
 
 ### Tidy Data Extraction
 
