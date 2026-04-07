@@ -390,7 +390,7 @@ p <- do_UmapPlot(seurat_obj)
 # perceptually uniform palette, optimised text sizing
 ```
 
-**Efficiency gain:** One function call replaces 10-15 lines of manual customisation, with consistent defaults across all analyses.
+**Philosophy and efficiency:** The Seurat approach exemplifies a common anti-pattern in scientific computing: forcing domain experts to become visualisation specialists. Researchers must possess detailed knowledge of ggplot2 theming, colour theory, and layout algorithms to produce publication-quality figures. This creates a cognitive burden that distracts from biological interpretation and introduces decision fatigue at every analysis stage. BadranSeq's encapsulation of these decisions in tested defaults embodies an "expertise for all" philosophy—publication standards should not require visualisation expertise. The approach ensures consistency across research groups, reduces training overhead for new lab members, and guarantees that all figures meet accessibility and reproducibility standards without individual researchers needing to track evolving best practices. The single-function-call approach eliminates copy-paste errors, ensures methodological consistency within and across projects, and produces reproducible figures without custom code that must be maintained and debugged. When visualisation standards evolve or accessibility requirements change, BadranSeq updates benefit all users automatically; custom styling code must be manually revised in every analysis script.
 
 ### A.2 PCA with Variance Annotation
 
@@ -420,7 +420,7 @@ p <- do_PcaPlot(seurat_obj, dims = c(1, 2))
 # formatted axis labels, publication theme
 ```
 
-**Efficiency gain:** Eliminates manual `@reductions` slot access, variance calculation, and label formatting. Consistent across all PC combinations.
+**Philosophy and efficiency:** The manual approach forces researchers to engage with Seurat's internal data structures—accessing the `@reductions` slot, understanding that standard deviations must be squared to obtain variance, and correctly formatting percentage labels. This requires knowledge of object internals that should be abstracted away from end users. The process introduces multiple failure points: incorrect slot access, mathematical errors in variance calculation, and inconsistent formatting across different PC combinations. BadranSeq's automatic variance annotation encapsulates both the technical knowledge of Seurat object structure and the statistical understanding of variance decomposition. This abstraction enables researchers to focus on biological interpretation—assessing whether visualised components capture sufficient variance—rather than implementation details. The consistency across all PC combinations ensures that methodological decisions are transparent and reproducible, supporting rigorous reporting in methods sections.
 
 ### A.3 Feature Expression Visualisation
 
@@ -458,7 +458,7 @@ p <- do_FeaturePlot(
 )
 ```
 
-**Efficiency gain:** Single call replaces manual colour scale selection, cell border addition, and outlier threshold configuration.
+**Philosophy and efficiency:** Perceptual uniformity in colour scales represents a critical yet often overlooked aspect of scientific visualisation. Seurat's default gradient creates unequal perceived differences for equal data intervals, compromising the quantitative interpretability that feature expression plots are intended to provide. Researchers must possess specialised knowledge of colour theory to identify and correct this issue. BadranSeq's systematic application of viridis embodies the principle that accessibility and perceptual accuracy should be defaults, not optional extras. The automatic cell border addition addresses a fundamental legibility challenge in high-density single-cell data, where overlapping points without borders render individual cells indistinguishable. The quantile cutoff functionality demonstrates sophisticated understanding of single-cell data distributions—extreme outliers are common yet biologically uninformative, and arbitrary threshold selection introduces researcher bias. By providing statistically principled cutoff options, BadranSeq ensures consistent treatment across different genes whilst maintaining data integrity. These defaults ensure that all generated figures meet modern accessibility standards and visualisation best practices without requiring users to track evolving recommendations in the visualisation literature.
 
 ### A.4 Split-Panel Comparisons
 
@@ -479,7 +479,7 @@ p <- do_UmapPlot(seurat_obj, split.by = "condition")
 # for target condition, preserved spatial relationships
 ```
 
-**Efficiency gain:** Single parameter enables sophisticated visualisation technique that would require complex manual ggplot2 construction in standard workflow.
+**Philosophy and efficiency:** The spatial context problem in split-panel visualisations illustrates a fundamental tension in dimensionality reduction interpretation. UMAP and t-SNE construct embeddings by preserving local neighbourhood structures; when subsets are visualised in isolation, these relationships become invisible, potentially leading to misinterpretation of population boundaries. The manual construction of silhouette plots requires sophisticated ggplot2 knowledge—layering multiple geom_point calls with different aesthetic mappings, ensuring consistent axis limits across panels, and managing legend integration. This complexity creates a barrier that prevents many researchers from employing this superior visualisation approach. BadranSeq's implementation demonstrates the principle that methodological sophistication should not require technical complexity. By encapsulating the silhouette approach in a single parameter, the package makes advanced visualisation techniques accessible to all researchers, regardless of their ggplot2 expertise. This democratisation of methodological best practices ensures that spatial context preservation becomes standard rather than exceptional, improving the quality and interpretability of comparative analyses across the field.
 
 ### A.5 Statistical Violin Plots
 
@@ -517,7 +517,7 @@ p <- do_StatsViolinPlot(
 # multiple comparison correction, formatted annotations
 ```
 
-**Efficiency gain:** Single function replaces complete statistical workflow (extraction, testing, formatting) with appropriate non-parametric tests and publication-ready annotation.
+**Philosophy and efficiency:** Statistical annotation of expression distributions represents a workflow where methodological appropriateness and implementation complexity create a significant barrier. Single-cell expression data violates the assumptions of standard parametric tests through zero-inflation, overdispersion, and non-normal distributions. Correct implementation requires statistical expertise to select appropriate non-parametric alternatives, perform multiple comparison corrections, and format results according to publication standards. The manual workflow—extraction, wrangling, testing, formatting—scales poorly with increasing gene and cell type numbers, introducing opportunities for error at each step. BadranSeq's integration of the complete statistical pipeline embodies the principle that rigorous statistical practice should be the default, not an optional add-on requiring specialised knowledge. The automatic application of Kruskal-Wallis and Dunn's tests with appropriate multiple comparison correction ensures that all figures meet statistical best practices. This approach eliminates the "statistics gap" where researchers may skip appropriate testing due to workflow complexity, ensuring that published figures support quantitatively rigorous biological conclusions.
 
 ### A.6 Variance Diagnostics
 
@@ -545,7 +545,7 @@ p <- EnhancedElbowPlot(seurat_obj, ndims = 30, cutoff_pc = 15)
 variance_df <- get_pca_variance(seurat_obj)
 ```
 
-**Efficiency gain:** Automatic variance conversion and cutoff annotation eliminate manual calculation and provide clear visual documentation of PC selection decisions.
+**Philosophy and efficiency:** Principal component selection represents a decision point where subjective interpretation can substantially influence downstream biological conclusions. The "elbow" method, whilst widely employed, lacks objective criteria and introduces researcher-dependent variability. Seurat's default output exacerbates this subjectivity by presenting standard deviations rather than the more interpretable variance percentages, requiring manual conversion that introduces calculation opportunities for error. BadranSeq's approach embodies the principle that methodological decisions should be transparent, reproducible, and quantitatively grounded. The automatic variance conversion ensures mathematical correctness without requiring users to understand the relationship between standard deviations and variance components. The optional cutoff annotation transforms subjective elbow identification into an explicit, documented decision that can be reported in methods sections and assessed by reviewers. This transparency supports more rigorous dimensionality reduction practices and enables systematic exploration of how PC selection thresholds influence biological conclusions, moving beyond arbitrary defaults toward informed, justifiable analytical choices.
 
 ### A.7 Data Extraction
 
@@ -581,6 +581,6 @@ expr_long <- fetch_feature_data(
 # explicit layer columns, ready for analysis
 ```
 
-**Efficiency gain:** Tidy data structures eliminate preprocessing steps and enable direct integration with modern R analytical workflows.
+**Philosophy and efficiency:** The tidy data principle—where each variable forms a column, each observation forms a row, and each type of observational unit forms a table—underpins modern data science workflows. Seurat's `FetchData()` violates this principle by trapping identifiers in rownames, mixing expression and metadata without clear structure, and returning formats requiring extensive manipulation before use with standard analytical tools. This creates friction at the interface between single-cell analysis and downstream statistical or visualisation workflows, forcing researchers to write boilerplate data wrangling code. BadranSeq's extraction functions embody the principle that data structures should facilitate analysis, not impede it. By returning explicit tidy tibbles with clear column naming conventions, the functions enable immediate integration with dplyr, ggplot2, and the broader tidyverse ecosystem. This approach eliminates a common source of analysis friction, supports composable analytical pipelines, and ensures that data extraction choices are explicit and reproducible. The explicit layer control addresses ambiguity in modern Seurat objects containing multiple expression matrices, ensuring that analytical decisions about which expression values to analyse are transparent and documented.
 
 ## References
