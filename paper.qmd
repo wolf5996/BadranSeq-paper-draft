@@ -219,34 +219,11 @@ These defaults remain consistent across datasets and cell type compositions, eli
 
 #### PCA: Automatic Variance Annotation
 
-Principal component analysis visualisations face a fundamental interpretability problem: without variance context, PC1 versus PC2 plots become meaningless to readers.
-Yet Seurat's default `DimPlot()` omits this crucial information, forcing researchers to manually extract variance percentages from the `@misc$pca` slot and format axis labels appropriately.
-This manual process introduces opportunities for error and inconsistency, particularly when generating multiple PCA views or when variance calculations require updates after data processing changes.
+Principal component analysis visualisations present a fundamental interpretability challenge: without variance context, PC1 versus PC2 plots provide insufficient information for rigorous interpretation (@fig-pca). Seurat's default `DimPlot()` omits variance percentages, forcing manual extraction from the `@reductions$pca` slot and custom axis label formatting---a process requiring knowledge of internal data structures and correct mathematical transformations.
 
-BadranSeq's `do_PcaPlot()` automatically computes and formats variance-explained labels for any requested PC combination.
-The function accesses the standard deviations stored in the Seurat object's PCA reduction, converts these to variance percentages using established formulas, and formats the axis labels appropriately.
-This automation eliminates a common source of figure preparation overhead whilst ensuring mathematical accuracy and consistency across all PCA visualisations.
+BadranSeq's `do_PcaPlot()` automates variance annotation by accessing standard deviations from the Seurat object's PCA reduction, converting to percentages, and formatting axis labels appropriately. This eliminates a common source of figure preparation overhead whilst ensuring mathematical accuracy across all PC combinations. The encapsulated domain knowledge reduces both cognitive load and error probability, enabling rapid generation of multiple PC views for comprehensive analysis.
 
-```r
-# Seurat: manual variance extraction and formatting
-pca_var <- (seurat_obj@reductions$pca@stdev)^2
-pca_percent <- round(100 * pca_var / sum(pca_var), 1)
-p1 <- DimPlot(seurat_obj, reduction = "pca") +
-  xlab(paste0("PC1 (", pca_percent[1], "%)")) +
-  ylab(paste0("PC2 (", pca_percent[2], "%)"))
-
-# BadranSeq: automatic annotation
-p2 <- do_PcaPlot(seurat_obj, dims = c(1, 2))
-```
-
-The manual approach requires understanding of Seurat's internal data structure, correct variance calculation (squaring standard deviations, converting to percentages), and proper ggplot2 axis label modification.
-The BadranSeq approach encapsulates this domain knowledge, reducing both cognitive load and error probability whilst enabling rapid generation of multiple PC combinations.
-
-Beyond convenience, automatic variance annotation enables more rigorous interpretation of PC plots.
-Researchers can immediately assess whether the visualised components capture sufficient variance to warrant biological interpretation, compare variance contributions across different PC pairs, and make informed decisions about dimensionality reduction parameters.
-This quantitative context is essential for methods sections and supports more robust biological conclusions.
-
-The variance calculation integrates seamlessly with other aspects of PCA interpretation, as discussed in Section 4.3 where `EnhancedElbowPlot()` provides complementary variance diagnostics for the complete PC spectrum.
+Automatic variance annotation supports more rigorous biological interpretation. Researchers can immediately assess whether visualised components capture sufficient variance to warrant analysis, compare contributions across PC pairs, and document dimensionality reduction decisions in methods sections. This quantitative context integrates with complementary variance diagnostics discussed in the following section.
 
 ![PCA comparison with Seurat on top and BadranSeq on bottom. Seurat's default PCA views omit variance explained, whereas BadranSeq's `do_PcaPlot()` automatically annotates axis labels with variance percentages for immediate interpretability.](badranseq_joss_figures/write/figures/fig2_pca_variance.svg){#fig-pca width="100%"}
 
