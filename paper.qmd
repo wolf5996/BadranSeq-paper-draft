@@ -181,21 +181,21 @@ Unlike dittoSeq and scater, it operates natively on Seurat objects and integrate
 
 @tbl-comparison summarises the functional differences.
 
-| Feature                        | Seurat | BadranSeq |
-|:-------------------------------|:------:|:---------:|
-| Variance explained on PCA axes |   No   |    Yes    |
-| Cell borders                   |   No   |    Yes    |
-| Cluster labels by default      |   No   |    Yes    |
-| Split-panel silhouettes        |   No   |    Yes    |
-| Publication theme              |   No   |    Yes    |
-| Viridis feature plots          |   No   |    Yes    |
-| Interactive cell selection     |  Limited  | Additive / subtractive |
-| Automatic rasterisation        |   No   |    Yes    |
-| Statistical violin plots       |   No   | Kruskal--Wallis |
-| Sankey / alluvial diagrams     |   No   |    Yes    |
-| Tidy data extraction           |  FetchData  | Tibble-based |
+| Feature                        | Seurat | SCpubr | BadranSeq |
+|:-------------------------------|:------:|:------:|:---------:|
+| Variance explained on PCA axes |   No   |   Yes  |    Yes    |
+| Cell borders                   |   No   |   Yes  |    Yes    |
+| Cluster labels by default      |   No   |   Yes  |    Yes    |
+| Split-panel silhouettes        |   No   |   Yes  |    Yes    |
+| Publication theme              |   No   |   Yes  |    Yes    |
+| Viridis feature plots          |   No   |   Yes  |    Yes    |
+| Interactive cell selection     |  Limited |  No   | Additive / subtractive |
+| Statistical violin plots       |   No   |   Yes  | Kruskal--Wallis |
+| Sankey / alluvial diagrams     |   No   |   Yes  |    Yes    |
+| Tidy data extraction           |  FetchData | No  | Tibble-based |
+| Direct dependencies            |   ---  |   56   |    19     |
 
-: Comparison of default capabilities between Seurat and BadranSeq. {#tbl-comparison}
+: Comparison of default capabilities between Seurat, SCpubr, and BadranSeq. {#tbl-comparison}
 
 ## Software Design
 
