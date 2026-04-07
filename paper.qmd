@@ -373,9 +373,9 @@ p1 <- DimPlot(seurat_obj, split.by = "condition")
 # BadranSeq: silhouette approach preserves context
 p2 <- do_UmapPlot(seurat_obj, split.by = "condition")
 
-# Advanced: custom silhouette transparency and border control
-p3 <- do_UmapPlot(seurat_obj, split.by = "condition", 
-                  silhouette_alpha = 0.3, plot_cell_borders = TRUE)
+# Advanced: explicit border control
+p3 <- do_UmapPlot(seurat_obj, split.by = "condition",
+                  plot_cell_borders = TRUE)
 ```
 
 The implementation leverages patchwork [@pedersen2020] to combine panels with shared legends and consistent axis limits, ensuring that spatial relationships remain interpretable across conditions.
