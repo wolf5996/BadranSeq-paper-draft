@@ -231,145 +231,41 @@ Automatic variance annotation supports more rigorous biological interpretation. 
 
 ### Feature Expression Visualisation
 
-Gene expression overlays constitute a fundamental figure class in scRNA-seq publications, typically appearing as multi-panel displays showing canonical markers across cell populations.
-These figures serve dual purposes: validating computational cell type assignments and demonstrating expression patterns to support biological conclusions.
-However, default Seurat implementations suffer from several visualisation problems that compromise both readability and quantitative interpretation.
+Gene expression overlays serve dual purposes in scRNA-seq publications: validating computational cell type assignments and demonstrating expression patterns to support biological conclusions (@fig-featureplot). However, Seurat's default `FeaturePlot()` implementation compromises both readability and quantitative interpretation through suboptimal colour scale selection and lack of cell borders in high-density regions.
 
-The primary challenge involves colour scale selection and dynamic range handling.
-Seurat's default `FeaturePlot()` applies a basic colour gradient that lacks perceptual uniformity, meaning that equal steps in colour intensity do not correspond to equal steps in perceived difference.
-This complicates quantitative interpretation, as readers cannot reliably assess relative expression levels from visual inspection alone.
-Additionally, the default approach lacks cell borders, making individual cells indistinguishable in high-density UMAP regions where overlapping points obscure expression boundaries.
+The primary challenge involves perceptual uniformity. Seurat's default colour gradient lacks perceptual linearity, meaning equal steps in intensity do not correspond to equal perceived differences. This complicates quantitative interpretation, as readers cannot reliably assess relative expression levels. Additionally, the absence of cell borders renders individual cells indistinguishable in dense UMAP regions.
 
-BadranSeq's `do_FeaturePlot()` addresses these limitations through systematic application of the viridis colour scale [@garnier2024], which provides perceptual uniformity and accessibility for readers with colour vision deficiencies.
-The function automatically applies cell borders to improve legibility in dense regions, implements intelligent legend positioning, and provides optional quantile-based expression cutoffs to handle outlier values appropriately.
-
-```r
-# Seurat: basic feature plot with manual styling needs
-p1 <- FeaturePlot(seurat_obj, features = c("CD3D", "CD8A", "CD14"))
-
-# BadranSeq: publication-ready defaults with viridis scale and borders
-p2 <- do_FeaturePlot(seurat_obj, features = c("CD3D", "CD8A", "CD14"))
-
-# BadranSeq: with quantile cutoffs for outlier handling
-p3 <- do_FeaturePlot(seurat_obj, features = c("CD3D", "CD8A", "CD14"),
-                     min.cutoff = "q10", max.cutoff = "q90")
-```
-
-The quantile cutoff functionality deserves particular attention, as single-cell expression data frequently contains extreme outliers that compress the meaningful dynamic range into a narrow portion of the colour scale.
-By specifying `min.cutoff` and `max.cutoff` parameters, researchers can focus the colour mapping on biologically relevant expression ranges whilst maintaining statistical rigour.
-This approach outperforms arbitrary threshold selection and provides consistent treatment across different genes with varying expression magnitudes.
-
-Multi-gene panels benefit substantially from these improvements, as consistent colour scaling and border application enable direct visual comparison across markers.
-The perceptual uniformity of the viridis scale ensures that apparent differences in expression intensity reflect genuine quantitative differences rather than artifacts of colour perception.
-This property becomes crucial when generating complex panels showing differentiation markers, signalling pathway components, or temporal expression patterns.
-
-The integration with ggplot2's grammar of graphics ensures that researchers retain full control over plot customisation despite the opinionated defaults.
-Advanced users can modify individual components---adjusting point sizes for different cell densities, overlaying contour lines, or applying custom transformations---whilst maintaining the core advantages of consistent theming and colour scale selection.
+BadranSeq's `do_FeaturePlot()` addresses these limitations through systematic application of the viridis colour scale [@garnier2024], which provides perceptual uniformity and accessibility. Automatic cell borders improve legibility, whilst optional quantile-based cutoffs handle outlier values that would otherwise compress the meaningful dynamic range. Multi-gene panels benefit from consistent colour scaling and border application, enabling direct visual comparison across markers with confidence that apparent differences reflect genuine quantitative variation rather than colour perception artifacts.
 
 ![Feature expression comparison showing Seurat's FeaturePlot() (top row) versus BadranSeq's do_FeaturePlot() (bottom row). Seurat uses default colour scales without cell borders. BadranSeq applies perceptually uniform viridis scales, cell borders for legibility in dense regions, and consistent publication styling. Genes shown: CD3D (T cells), CD8A (cytotoxic T cells), and CD14 (monocytes).](badranseq_joss_figures/write/figures/fig4_featureplot.svg){#fig-featureplot width="100%"}
 
 ### Variance Diagnostics
 
-Principal component selection represents a critical decision point in scRNA-seq analysis workflows, directly affecting downstream clustering, trajectory inference, and differential expression testing.
-Yet this decision typically relies on subjective interpretation of elbow plots showing standard deviations across principal components.
-Seurat's default `ElbowPlot()` provides the raw standard deviation values but requires manual conversion to variance percentages and subjective identification of the "elbow" position where marginal variance contributions become negligible.
+Principal component selection critically affects downstream clustering, trajectory inference, and differential expression testing, yet typically relies on subjective interpretation of standard deviation plots. Seurat's `ElbowPlot()` provides raw values but requires manual conversion to variance percentages and subjective "elbow" identification (@fig-elbow).
 
-BadranSeq's `EnhancedElbowPlot()` transforms this diagnostic process by automatically computing and displaying variance explained alongside an optional cutoff annotation.
-The function converts standard deviations to variance percentages using the same mathematical framework as `do_PcaPlot()`, ensuring consistency across all variance-related visualisations in the analysis pipeline.
-The cutoff functionality allows researchers to overlay their PC selection decision directly onto the diagnostic plot, creating a clear visual record for methods sections and enabling rapid assessment of alternative cutoff scenarios.
+BadranSeq's `EnhancedElbowPlot()` automates variance-explained calculation using the same framework as `do_PcaPlot()`, ensuring consistency across the analysis pipeline. Optional cutoff annotation overlays PC selection decisions onto the diagnostic plot, creating clear visual records for methods sections and enabling rapid assessment of alternative scenarios. The `get_pca_variance()` function provides programmatic access for custom selection criteria or automated pipeline integration.
 
-```r
-# Seurat: basic elbow plot requiring manual interpretation
-p1 <- ElbowPlot(seurat_obj, ndims = 30)
-
-# BadranSeq: variance explained with optional cutoff annotation
-p2 <- EnhancedElbowPlot(seurat_obj, ndims = 30, cutoff_pc = 15)
-
-# Extract variance data for custom analysis
-variance_df <- get_pca_variance(seurat_obj)
-```
-
-The integration of variance diagnostics with other PCA visualisations creates a coherent analytical narrative.
-Researchers can examine the overall variance distribution using `EnhancedElbowPlot()`, visualise specific PC combinations using `do_PcaPlot()` (as described in Section 4.1), and make informed decisions about the appropriate dimensionality for downstream analysis.
-This workflow eliminates common inconsistencies where PC selection criteria differ between exploratory analysis and final figure preparation.
-
-The `get_pca_variance()` function provides programmatic access to the underlying variance calculations, enabling advanced users to implement custom selection criteria or integrate variance information into automated analysis pipelines.
-This data-driven approach to PC selection supports more rigorous reporting in methods sections and facilitates systematic parameter exploration across multiple datasets.
-
-Beyond diagnostic utility, the enhanced elbow plot format communicates methodological decisions more effectively to readers.
-The variance percentage scale enables direct assessment of information retention, whilst the cutoff annotation clarifies the analytical choices underlying downstream results.
-This transparency becomes particularly valuable for high-dimensional datasets where PC selection substantially influences biological conclusions.
+This integration creates a coherent analytical narrative: researchers examine overall variance distribution, visualise specific PC combinations, and document dimensionality decisions transparently. The variance percentage scale enables direct assessment of information retention, whilst cutoff annotations clarify analytical choices underlying downstream results.
 
 ![Elbow plot comparison. Top: Seurat's default `ElbowPlot()` showing standard deviation by principal component. Bottom: BadranSeq's `EnhancedElbowPlot()` showing variance explained with an annotated cutoff.](badranseq_joss_figures/write/figures/fig5_elbow_colors.svg){#fig-elbow width="80%"}
 
 ### Split-Panel Context Preservation
 
-Comparative visualisations across experimental conditions or time points represent a fundamental requirement in scRNA-seq analysis, yet standard faceting approaches systematically destroy the spatial context that makes UMAP embeddings interpretable.
-When researchers apply Seurat's `split.by` parameter, each panel displays only the subset of cells corresponding to that condition, creating visually isolated plots that obscure spatial relationships between populations.
-This fragmentation becomes particularly problematic when analysing treatment responses, developmental trajectories, or disease progression, where understanding relative positioning within the complete cellular landscape proves essential for biological interpretation.
+Comparative visualisations across experimental conditions require preserving spatial context that standard faceting destroys (@fig-silhouette). Seurat's `split.by` parameter displays only condition-specific cells per panel, obscuring neighbourhood relationships established by dimensionality reduction algorithms. Populations appearing isolated in condition-specific panels may actually sit adjacent to other cell types in the complete embedding, altering biological interpretation.
 
-The mathematical intuition underlying this problem relates to the fundamental properties of dimensionality reduction algorithms.
-UMAP and t-SNE construct embeddings by preserving local neighbourhood structures across the complete dataset; when subsets of cells are visualised in isolation, these neighbourhood relationships become invisible, potentially leading to misinterpretation of population boundaries and relative distances.
-A population that appears isolated in a condition-specific panel might actually sit adjacent to other cell types in the complete embedding, dramatically altering its biological interpretation.
+BadranSeq addresses this through silhouette-based visualisation. When provided with a `split.by` parameter, `do_UmapPlot()` renders all cells as grey silhouettes with borders in each panel, overlaying only condition-specific cells in colour. This maintains geometric relationships whilst enabling clear identification of condition-specific distributions. The implementation leverages patchwork [@pedersen2020] for shared legends and consistent axis limits across panels.
 
-BadranSeq addresses this challenge through a silhouette-based visualisation approach that preserves complete spatial context whilst highlighting condition-specific populations.
-The `do_UmapPlot()` function, when provided with a `split.by` parameter, renders all cells as grey silhouettes with borders in each panel, then overlays only the cells corresponding to the current condition in colour.
-This approach maintains the geometric relationships established by the dimensionality reduction algorithm whilst enabling clear identification of condition-specific cell distributions.
-
-```r
-# Seurat: standard faceting loses spatial context
-p1 <- DimPlot(seurat_obj, split.by = "condition")
-
-# BadranSeq: silhouette approach preserves context
-p2 <- do_UmapPlot(seurat_obj, split.by = "condition")
-
-# Advanced: explicit border control
-p3 <- do_UmapPlot(seurat_obj, split.by = "condition",
-                  plot_cell_borders = TRUE)
-```
-
-The implementation leverages patchwork [@pedersen2020] to combine panels with shared legends and consistent axis limits, ensuring that spatial relationships remain interpretable across conditions.
-The grey silhouette approach provides sufficient visual context to understand population positioning without overwhelming the highlighted cells of interest.
-Border application ensures that individual cells remain distinguishable even in high-density regions where overlapping points might otherwise obscure population boundaries.
-
-This visualisation strategy proves particularly valuable for longitudinal studies, treatment comparisons, and developmental analyses where spatial relationships convey critical biological information.
-Researchers can immediately assess whether treatment-responsive populations occupy distinct spatial domains, whether developmental progression follows continuous trajectories, or whether disease-associated cells cluster in specific regions of the cellular landscape.
-Such insights become impossible to extract from traditional faceted plots but emerge naturally from the silhouette approach.
-
-The method scales effectively to multiple conditions and integrates seamlessly with other BadranSeq features, including automatic colour palette generation and consistent theming.
-Advanced users retain full control over silhouette transparency, border properties, and panel arrangement whilst benefiting from the preserved spatial context that facilitates rigorous biological interpretation.
+This approach proves particularly valuable for longitudinal studies, treatment comparisons, and developmental analyses where spatial relationships convey critical information. Researchers can assess whether treatment-responsive populations occupy distinct domains, whether developmental progression follows continuous trajectories, or whether disease-associated cells cluster in specific regions---insights impossible to extract from traditional faceted plots.
 
 ![Split-panel context preservation comparison. Seurat's default split.by faceting (top row) isolates each group into separate panels, destroying embedding geometry context---cells from other groups are completely absent. BadranSeq's silhouette approach (bottom row) renders all cells as grey backgrounds in each panel, overlaying only target cells in colour, preserving spatial relationships across conditions.](badranseq_joss_figures/write/figures/fig3_split_silhouette.svg){#fig-silhouette width="100%"}
 
 ### Statistical Annotation Integration
 
-Expression distribution comparisons across cell types constitute a standard analytical task in scRNA-seq research, yet the conventional workflow requires substantial manual effort and statistical expertise.
-Researchers must extract expression data using `Seurat::FetchData()`, wrangle the returned data structure into appropriate format, select and apply suitable statistical tests for the data distribution characteristics, and manually format results onto violin or box plots.
-This process becomes particularly cumbersome when comparing multiple genes across numerous cell type combinations, where the manual workflow scales poorly and introduces opportunities for statistical or formatting errors.
+Expression distribution comparisons across cell types require substantial manual effort and statistical expertise in conventional workflows (@fig-violin). Researchers must extract data using `FetchData()`, wrangle into appropriate format, select suitable tests for non-normal distributions, and manually format results. This becomes cumbersome when comparing multiple genes across cell type combinations, with poor scaling and opportunities for error.
 
-The statistical challenges extend beyond workflow efficiency to methodological appropriateness.
-Single-cell expression data exhibits substantial zero-inflation, overdispersion, and non-normal distributions that violate the assumptions of standard parametric tests.
-Non-parametric approaches such as the Kruskal--Wallis test and Dunn's pairwise comparisons represent more appropriate choices, yet these require statistical knowledge to implement correctly and format appropriately for publication.
+Single-cell expression data exhibits zero-inflation, overdispersion, and non-normal distributions that violate parametric test assumptions. Non-parametric approaches such as Kruskal--Wallis and Dunn's pairwise comparisons represent more appropriate choices, yet require statistical knowledge to implement correctly.
 
-BadranSeq's `do_StatsViolinPlot()` integrates the complete statistical testing workflow into a single function call that handles data extraction, test selection, multiple comparison correction, and result formatting automatically.
-The function wraps `ggstatsplot::ggbetweenstats()` [@patil2021] whilst providing Seurat-aware data extraction, automatic palette generation consistent with other BadranSeq functions, and a `group.levels` argument that enables subset comparisons without manual object manipulation.
-
-```r
-# Seurat: manual workflow requiring statistical expertise
-expression_data <- FetchData(seurat_obj, vars = c("CD3D", "seurat_annotations"))
-# ... manual data wrangling, test selection, formatting ...
-p1 <- VlnPlot(seurat_obj, features = "CD3D", group.by = "seurat_annotations")
-
-# BadranSeq: integrated statistical testing with automatic formatting
-p2 <- do_StatsViolinPlot(seurat_obj, features = "CD3D", 
-                         group.by = "seurat_annotations",
-                         group.levels = c("Naive CD4 T", "Memory CD4 T", "CD8 T"))
-
-# Control statistical annotation display
-p3 <- do_StatsViolinPlot(seurat_obj, features = "CD3D",
-                         group.by = "seurat_annotations", 
-                         pairwise.display = "significant")
-```
+BadranSeq's `do_StatsViolinPlot()` integrates the complete statistical testing workflow into a single function call, handling data extraction, test selection, multiple comparison correction, and result formatting automatically. The function wraps `ggstatsplot::ggbetweenstats()` [@patil2021] with Seurat-aware extraction and automatic palette generation. The `group.levels` argument enables subset comparisons without manual object manipulation, whilst `pairwise.display` controls whether all pairs, significant pairs only, or no brackets appear.
 
 The function performs Kruskal--Wallis omnibus testing by default, with Dunn's pairwise comparisons using Holm correction for multiple testing.
 The statistical results are formatted directly onto the plot with publication-appropriate typography, eliminating the need for manual annotation or separate statistical analysis workflows.
@@ -391,53 +287,21 @@ As discussed in Section 4.8, the statistical functionality integrates seamlessly
 
 ### Categorical Relationship Visualisation
 
-Metadata relationships in single-cell datasets often exhibit complex many-to-many mappings that resist effective representation through standard tabular formats.
-The relationship between computational cluster assignments and biological cell type annotations exemplifies this challenge: whilst researchers expect clean one-to-one correspondences, real datasets frequently display clusters that span multiple cell types or cell types that fragment across multiple clusters.
-Traditional approaches rely on contingency tables or correlation matrices that obscure the flow patterns underlying these relationships, making it difficult to assess annotation quality or identify problematic assignments.
+Metadata relationships in single-cell datasets often exhibit complex many-to-many mappings resisting effective tabular representation. The relationship between cluster assignments and cell type annotations exemplifies this: real datasets frequently display clusters spanning multiple cell types or cell types fragmenting across clusters (@fig-sankey). Traditional contingency tables obscure flow patterns, complicating annotation quality assessment.
 
-Sankey diagrams provide an intuitive alternative that emphasises flow relationships over static associations.
-BadranSeq's `do_SankeyPlot()` leverages the ggalluvial package [@brunson2020] to create alluvial visualisations that render each metadata category as a vertical stratum, with flows between strata representing the cell distributions across categories.
-The width of each flow corresponds directly to the number of cells sharing that combination of metadata values, providing immediate visual feedback about the strength of different associations.
+Sankey diagrams provide an intuitive alternative emphasising flow over static associations. BadranSeq's `do_SankeyPlot()` leverages ggalluvial [@brunson2020] to render metadata categories as vertical strata, with flow widths corresponding to cell counts sharing each metadata combination. Clean one-to-one mappings appear as non-branching flows, whilst problematic assignments manifest as complex branching patterns immediately highlighting areas requiring review.
 
-```r
-# Simple two-column comparison: clusters to annotations
-p1 <- do_SankeyPlot(seurat_obj, columns = c("seurat_clusters", "seurat_annotations"))
-
-# Three-way relationship: clusters to annotations to treatment response
-p2 <- do_SankeyPlot(seurat_obj, columns = c("seurat_clusters", "seurat_annotations", "response"))
-```
-
-The visualisation approach proves particularly valuable for assessing the quality of automated cell type annotation workflows.
-Clean one-to-one mappings appear as non-branching flows between single cluster and annotation strata, whilst problematic assignments manifest as complex branching patterns that immediately highlight areas requiring manual review.
-This visual diagnostic capability enables rapid quality assessment across large annotation projects and facilitates systematic improvement of annotation algorithms.
-
-Beyond cluster validation, Sankey diagrams excel at exploring complex metadata relationships that involve three or more categorical variables.
-Treatment response patterns, developmental stage progressions, and tissue-specific expression signatures often involve intricate multi-way interactions that become apparent through alluvial visualisation but remain hidden in pairwise comparisons.
-The flowing visual metaphor aligns naturally with biological processes involving state transitions or population dynamics.
-
-The integration with BadranSeq's theming system ensures consistent visual presentation with other plot types, whilst the underlying ggalluvial implementation provides access to advanced formatting options for specialised applications.
-Automatic colour assignment follows the same palette generation logic used throughout the package, maintaining visual consistency whilst ensuring sufficient contrast for category discrimination.
+Beyond cluster validation, Sankey diagrams excel at exploring three-way relationships involving treatment responses, developmental progressions, or tissue-specific signatures. The flowing visual metaphor aligns naturally with biological processes involving state transitions. Integration with BadranSeq's theming ensures consistent visual presentation, whilst automatic colour assignment maintains palette consistency across all plot types.
 
 ![Sankey diagram showing the relationship between Seurat cluster assignments (left) and cell type annotations (right) in the PBMC 3k dataset.](badranseq_joss_figures/write/figures/fig7_sankey.svg){#fig-sankey width="90%"}
 
 ### Dependency Engineering
 
-The evolution of the R package ecosystem has created increasingly complex dependency webs that impose substantial hidden costs on end users.
-While feature-rich packages offer comprehensive functionality, they often require large dependency trees that complicate installation, increase vulnerability to version conflicts, and impose long-term maintenance burdens that may exceed the value of the additional features.
-This presents a particular challenge for visualisation packages, where the core functionality (creating publication-ready plots) can be achieved with modest dependencies, yet comprehensive implementations may bundle extensive additional features that most users never require.
+The R package ecosystem's evolution has created complex dependency webs imposing substantial hidden costs. Feature-rich packages often require large dependency trees that complicate installation, increase version conflict vulnerability, and impose maintenance burdens exceeding the value of additional features. This presents particular challenges for visualisation packages, where core functionality can be achieved with modest dependencies, yet comprehensive implementations bundle extensive features most users never require (@fig-dependency).
 
-The dependency question becomes critical in computational research environments where package installations must remain stable across extended project timelines, often spanning multiple years.
-Version conflicts between dependencies can render previously functional code inoperable, particularly when different packages require incompatible versions of shared dependencies.
-Continuous integration systems amplify these problems, as dependency resolution failures can break entire analytical pipelines for reasons unrelated to the scientific content.
+Version conflicts become critical in research environments requiring stability across multi-year project timelines. Different packages requiring incompatible dependency versions can render previously functional code inoperable. Continuous integration systems amplify these problems, as resolution failures break analytical pipelines for reasons unrelated to scientific content.
 
-BadranSeq adopts a minimalist dependency philosophy that prioritises core functionality over comprehensive feature coverage.
-The package maintains only 19 direct dependencies compared to 56 for SCpubr---a 66\% reduction that translates directly to reduced complexity in dependency resolution, faster installation times, and lower probability of version conflicts.
-This streamlined approach does not compromise functionality for the core visualisation tasks that researchers perform daily: UMAP plots, feature expression overlays, PCA visualisations, and basic statistical comparisons.
-
-The comparison quantified in @fig-dependency illustrates the practical implications of this design choice.
-Installation time scales approximately linearly with dependency count, particularly in environments with limited network bandwidth or when dependencies require compilation.
-Version conflict probability increases combinatorially, as each additional dependency introduces potential incompatibilities with all existing dependencies.
-Long-term maintenance overhead grows similarly, as package updates may require resolving conflicts across the entire dependency tree rather than focusing on the core functionality that users actually require.
+BadranSeq adopts a minimalist philosophy prioritising core functionality. The package maintains 19 direct dependencies compared to 56 for SCpubr---a 66\% reduction translating to reduced resolution complexity, faster installation, and lower conflict probability. This streamlined approach does not compromise functionality for core tasks: UMAP plots, feature expression overlays, PCA visualisations, and statistical comparisons. Installation time scales with dependency count, whilst conflict probability increases combinatorially. The reduction supports long-term reproducibility without sacrificing publication-ready aesthetics.
 
 BadranSeq achieves this reduction through careful selection of established, stable packages with minimal transitive dependencies.
 The core visualisation capabilities rely primarily on ggplot2, which provides a mature and stable foundation for publication-quality graphics.
@@ -454,44 +318,15 @@ BadranSeq provides equivalent or superior functionality across all major visuali
 
 ### Data Extraction and Interoperability
 
-The interface between single-cell analysis and downstream visualisation or statistical workflows often encounters friction at the data extraction step.
-Seurat's `FetchData()` function, whilst functional, returns data structures that conflict with modern tidy data principles and require manual reshaping for integration with dplyr and ggplot2 workflows.
-The function traps cell barcodes in rownames rather than explicit columns, mixes expression and metadata in single calls without clear layer specification, and returns data frames that require extensive manipulation before use in typical analytical pipelines.
+The interface between single-cell analysis and downstream workflows encounters friction at data extraction. Seurat's `FetchData()` returns structures conflicting with tidy data principles: barcodes trapped in rownames, mixed expression and metadata without clear layer specification, and data frames requiring extensive manipulation for dplyr and ggplot2 integration.
 
-BadranSeq addresses these limitations through two complementary data extraction functions that embrace tidy data principles and provide explicit control over the extracted information.
-`fetch_cell_data()` returns cell-level metadata and dimensionality reduction coordinates as a tidy tibble with `cell_id` as an explicit column, enabling direct integration with dplyr verbs and eliminating the rowname manipulation that complicates downstream analysis.
-`fetch_feature_data()` extracts expression data in long format with one row per cell-feature combination, providing explicit control over expression layers and enabling seamless integration with ggplot2's aesthetic mapping system.
+BadranSeq addresses this through two complementary extraction functions. `fetch_cell_data()` returns metadata and embeddings as tidy tibbles with explicit `cell_id` columns, enabling direct dplyr integration. `fetch_feature_data()` extracts expression in long format with one row per cell-feature combination, providing explicit layer control and seamless ggplot2 aesthetic mapping.
 
-```r
-# Seurat: FetchData returns mixed structure with trapped rownames
-seurat_data <- FetchData(seurat_obj, vars = c("CD3D", "UMAP_1", "UMAP_2", "seurat_annotations"))
-# Requires manual conversion of rownames to explicit column
+The tidy approach facilitates composable workflows leveraging the tidyverse ecosystem. Researchers apply standard dplyr operations without preprocessing, chain operations with pipes, and integrate results with ggplot2 or custom statistics. This eliminates analysis friction and supports exploratory, iterative investigation.
 
-# BadranSeq: tidy extraction with explicit cell identifiers
-cell_metadata <- fetch_cell_data(seurat_obj, 
-                                 embeddings = "umap", 
-                                 metadata_cols = "seurat_annotations")
+Explicit layer control addresses confusion in modern Seurat workflows containing multiple expression layers (counts, data, scaled, integrated). Clear column naming eliminates ambiguity about which values are analysed, supporting reproducible reporting.
 
-expression_data <- fetch_feature_data(seurat_obj,
-                                      features = c("CD3D", "CD8A", "CD14"),
-                                      layers = c("counts", "data"))
-```
-
-The tidy approach facilitates composable analytical workflows that leverage the full power of the tidyverse ecosystem.
-Researchers can apply standard dplyr operations (filtering, grouping, summarising) directly to the extracted data without preprocessing steps, chain operations using pipe operators, and integrate results seamlessly with ggplot2 visualisations or custom statistical procedures.
-This compatibility eliminates a common source of analysis friction and supports more exploratory, iterative approaches to data investigation.
-
-The explicit layer control provided by `fetch_feature_data()` addresses another common source of confusion in Seurat workflows.
-Modern Seurat objects may contain multiple expression layers (raw counts, normalised data, scaled data, integrated values), and different analytical tasks require different layers.
-By making layer selection explicit and providing clear column naming conventions, BadranSeq eliminates ambiguity about which expression values are being analysed and supports reproducible reporting of analytical choices.
-
-Interactive cell selection capabilities complement the data extraction functionality through `select_cells_interactive()`, which provides a Shiny-based interface for brush-selecting cells from any computed embedding.
-The function supports additive selection modes (building complex selections through multiple brush operations), subtractive modes (removing unwanted cells from existing selections), and returns either character vectors of cell barcodes or subsetted Seurat objects for downstream analysis.
-This interactivity surpasses Seurat's `CellSelector()` in flexibility whilst maintaining compatibility with standard Seurat workflows.
-
-Performance considerations become relevant for large datasets, where visualisation functions automatically apply rasterisation to point layers exceeding configurable cell count thresholds.
-The `ggrastr` integration maintains vector formatting for text and axis elements whilst converting dense point clouds to raster graphics, preventing prohibitively large file sizes without compromising visual quality.
-This automation eliminates manual performance tuning whilst ensuring that generated figures remain suitable for publication across different dataset scales.
+Interactive selection through `select_cells_interactive()` provides Shiny-based brush selection from any embedding, supporting additive and subtractive modes. This surpasses Seurat's `CellSelector()` in flexibility. For large datasets, automatic rasterisation via `ggrastr` maintains vector text and axes whilst converting dense point clouds to raster graphics, preventing large file sizes without quality compromise.
 
 ### Interactive Cell Selection
 
