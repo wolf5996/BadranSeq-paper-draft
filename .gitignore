@@ -1,24 +1,26 @@
-# Quarto cache
+# Ignore everything by default
+*
+
+# Whitelist root-level files
+!/.gitignore
+!/README.md
+!/paper.qmd
+!/references.bib
+!/apa.csl
+
+# Whitelist scripts directory and specific file types
+!/badranseq_joss_figures/
+!/badranseq_joss_figures/scripts/
+!/badranseq_joss_figures/scripts/*.qmd
+!/badranseq_joss_figures/scripts/*.R
+
+# Explicit ignores (even within whitelisted dirs)
+badranseq_joss_figures/scripts/*.html
+badranseq_joss_figures/write/
+AGENTS.md
+
+# Ignore Quarto/R build artifacts
+*.pdf
+*.tex
 .quarto/
-
-# OS
-.DS_Store
-
-# Personal context (CV, notes — not for version control)
-context/
-
-# Quarto build artefacts
 paper_files/
-badranseq_joss_figures/write/figures/*.pdf
-
-# Rendered output (regenerate with quarto render)
-paper.pdf
-paper.tex
-paper.log
-paper.aux
-paper.out
-paper.bbl
-paper.blg
-paper.fls
-paper.fdb_latexmk
-paper.synctex.gz
