@@ -36,51 +36,65 @@ Figures are saved to `../write/figures/` and referenced by `paper.qmd` via
 | 6 | `fig6_stats_violin.svg` | Statistical violin plot with pairwise testing |
 | 7 | `fig7_sankey.svg` | Sankey/alluvial diagram for metadata relationships |
 
-## Seurat Default vs BadranSeq Comparison
+## Figure 1: Comprehensive UMAP Comparison
 
-This figure demonstrates the visual difference between Seurat's `DimPlot()`
-defaults and BadranSeq's `do_UmapPlot()` output on the same dataset.
+This figure demonstrates the visual differences between Seurat's `DimPlot()`
+and BadranSeq's `do_UmapPlot()` across default and enhanced configurations.
 
-- **Left panel**: `Seurat::DimPlot()` with default settings
-  - No cell borders, no cluster labels, default colour palette
-- **Right panel**: `BadranSeq::do_UmapPlot()` with default settings
-  - Cell borders, boxed cluster labels, publication theme, vivid palette
-- **Composition**: Side-by-side via `patchwork` with panel annotations
+- **Top row**: Seurat outputs — basic exploratory plots lacking publication features
+- **Bottom row**: BadranSeq outputs — publication-ready with automatic styling
+- **Columns**: Default settings (left) vs enhanced configurations (right)
 
 ```{r}
 #| label: fig1-comparison
 
 # Libraries ----------
-
 library(BadranSeq)
 library(Seurat)
 library(ggplot2)
 library(patchwork)
 
 # Inputs ----------
-
 data(pbmc3k)
 
 # Processing ----------
+# Seurat plots (top row)
+p_seurat_default <- Seurat::DimPlot(pbmc3k, reduction = "umap") +
+  ggtitle("Seurat: Default") +
+  theme(plot.title = element_text(face = "bold", size = 12))
 
-p_seurat <- Seurat::DimPlot(pbmc3k, reduction = "umap") +
-  ggtitle("Seurat Default")
+p_seurat_labels <- Seurat::DimPlot(pbmc3k, reduction = "umap", label = TRUE) +
+  ggtitle("Seurat: With Labels") +
+  theme(plot.title = element_text(face = "bold", size = 12))
 
-p_badranseq <- BadranSeq::do_UmapPlot(pbmc3k) +
-  ggtitle("BadranSeq")
+# BadranSeq plots (bottom row)
+p_badran_default <- BadranSeq::do_UmapPlot(pbmc3k) +
+  ggtitle("BadranSeq: Default") +
+  theme(plot.title = element_text(face = "bold", size = 12))
 
-p_combined <- p_seurat + p_badranseq +
+p_badran_enhanced <- BadranSeq::do_UmapPlot(pbmc3k, label = TRUE, plot_cell_borders = TRUE) +
+  ggtitle("BadranSeq: Enhanced") +
+  theme(plot.title = element_text(face = "bold", size = 12))
+
+# Patchwork layout: 2 rows x 2 columns
+p_combined <- (p_seurat_default + p_seurat_labels) / (p_badran_default + p_badran_enhanced) +
   plot_annotation(
     title = "UMAP Visualisation Comparison",
-    theme = theme(plot.title = element_text(face = "bold", size = 16, hjust = 0.5))
+    subtitle = "Seurat (top) requires manual styling for publication; BadranSeq (bottom) produces publication-ready output by default",
+    theme = theme(
+      plot.title = element_text(face = "bold", size = 16, hjust = 0.5),
+      plot.subtitle = element_text(size = 11, hjust = 0.5, colour = "grey40")
+    )
   )
 
 # Outputs ----------
-
 ggsave(
   "../write/figures/fig1_comparison.svg",
   p_combined,
-  width = 14, height = 7)
+  width = 14,
+  height = 10,
+  bg = "white"
+)
 ```
 
 ## PCA with Variance Labels
