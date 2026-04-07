@@ -28,13 +28,14 @@ Figures are saved to `../write/figures/` and referenced by `paper.qmd` via
 
 | Figure | File | Description |
 |--------|------|-------------|
-| 1 | `fig1_comparison.svg` | Seurat default vs BadranSeq UMAP |
+| 1 | `fig1_comparison.svg` | Comprehensive UMAP comparison (2×2) |
 | 2 | `fig2_pca_variance.svg` | PCA with automatic variance labels |
-| 3 | `fig3_split_silhouette.svg` | Split-panel silhouette visualisation |
-| 4 | `fig4_featureplot.svg` | Gene expression overlay |
+| 3 | `fig3_split_silhouette.svg` | Split-panel context preservation comparison |
+| 4 | `fig4_featureplot.svg` | Feature expression comparison (2×3) |
 | 5 | `fig5_elbow_colors.svg` | Elbow plot with cutoff + colour palette |
-| 6 | `fig6_stats_violin.svg` | Statistical violin plot with pairwise testing |
+| 6 | `fig6_stats_violin.svg` | Statistical violin comparison (side-by-side) |
 | 7 | `fig7_sankey.svg` | Sankey/alluvial diagram for metadata relationships |
+| 8 | `fig8_dependency_comparison.svg` | Dependency footprint comparison (bar chart) |
 
 ## Figure 1: Comprehensive UMAP Comparison
 
