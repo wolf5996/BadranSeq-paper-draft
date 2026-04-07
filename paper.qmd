@@ -199,20 +199,11 @@ Unlike dittoSeq and scater, it operates natively on Seurat objects and integrate
 
 ## Software Design
 
-BadranSeq is organised around a small set of user-facing functions that share a common internal engine and a consistent parameter interface (`object`, `reduction`, `group.by`, `split.by`, `plot_cell_borders`, etc.).
-All functions accept a Seurat object as input and return native ggplot2 objects.
-This design preserves compatibility with existing Seurat workflows whilst eliminating the repetitive figure polishing steps that researchers currently perform manually.
+BadranSeq is built on a unified architecture where all functions accept Seurat objects and return native ggplot2 objects, preserving compatibility with existing workflows whilst eliminating repetitive styling steps. The package follows a "sensible defaults" philosophy: each function produces publication-ready output without requiring additional customisation, yet returned plots remain standard ggplot objects for optional downstream modification.
 
-The package embodies a "sensible defaults" philosophy: every function produces publication-ready output without requiring additional styling or parameter tuning.
-Unlike many specialised visualisation packages that require learning new syntax or data structures, BadranSeq leverages the familiar Seurat object interface and ggplot2 grammar.
-Users invoke a single function call where they might previously have written 10-15 lines of customisation code, yet every returned plot remains a standard ggplot object for optional downstream modification.
+The design addresses a critical gap in the Seurat ecosystem. Whilst Seurat excels at data processing, its plotting functions prioritise flexibility over presentation quality, forcing researchers to repeatedly perform manual styling tasks---adding variance labels, configuring colour scales, applying consistent themes---rather than focusing on biological interpretation. BadranSeq automates these decisions using established visualisation best practices, as demonstrated across the comparison figures (@fig-comparison, @fig-pca, @fig-featureplot, @fig-elbow, @fig-silhouette, @fig-violin).
 
-This approach addresses a specific gap in the Seurat ecosystem: while Seurat excels at data processing and exploratory analysis, its plotting functions prioritise flexibility over presentation quality.
-The result is that researchers spend substantial time on repetitive styling tasks---adding variance labels to PCA axes, applying consistent themes, configuring colour scales for readability---rather than focusing on biological interpretation.
-BadranSeq automates these decisions using established best practices from the visualisation literature, whilst preserving the underlying flexibility of the ggplot2 system.
-
-The architecture follows a routing pattern where `do_DimPlot()` serves as a unified entry point, automatically dispatching to specialised functions (`do_PcaPlot()`, `do_UmapPlot()`, etc.) based on the requested reduction type.
-This design allows users to switch between visualisation types without learning different function signatures, whilst enabling each specialised function to implement reduction-specific enhancements such as automatic variance annotation for PCA or optimised colour scaling for feature plots.
+The architecture employs a routing pattern where `do_DimPlot()` serves as a unified entry point, dispatching to specialised functions based on the requested reduction type. This enables consistent interfaces across visualisation types whilst allowing reduction-specific enhancements such as automatic variance annotation for PCA or optimised colour scaling for feature plots. Detailed code comparisons demonstrating efficiency gains over standard Seurat workflows are provided in Appendix A.
 
 ### Dimensionality Reduction Visualisations
 
