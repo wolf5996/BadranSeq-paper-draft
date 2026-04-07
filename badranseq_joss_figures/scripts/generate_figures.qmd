@@ -418,26 +418,98 @@ cluster assignments and biological cell type annotations.
 #| label: fig7-sankey
 
 # Libraries ----------
-
 library(BadranSeq)
 library(Seurat)
 library(ggplot2)
 
 # Inputs ----------
-
 data(pbmc3k)
 
 # Processing ----------
-
 p_sankey <- BadranSeq::do_SankeyPlot(
   pbmc3k,
   columns = c("seurat_clusters", "seurat_annotations")
 )
 
 # Outputs ----------
-
 ggsave(
   "../write/figures/fig7_sankey.svg",
   p_sankey,
-  width = 9, height = 6)
+  width = 9,
+  height = 6,
+  bg = "white"
+)
+```
+
+## Figure 8: Dependency Footprint Comparison
+
+This figure quantifies the dependency burden difference between BadranSeq and
+SCpubr, illustrating the trade-off between functionality and maintenance overhead.
+
+- **BadranSeq**: 19 direct dependencies (minimal footprint)
+- **SCpubr**: 56 direct dependencies (broad functionality)
+- **Implication**: Reduced installation time, fewer version conflicts, lower
+  long-term maintenance burden
+
+```{r}
+#| label: fig8-dependency-comparison
+
+# Libraries ----------
+library(ggplot2)
+
+# Inputs ----------
+# Dependency counts from DESCRIPTION files
+dependency_data <- data.frame(
+  Package = c("BadranSeq", "SCpubr"),
+  Dependencies = c(19, 56),
+  stringsAsFactors = FALSE
+)
+
+# Processing ----------
+p_deps <- ggplot(
+  dependency_data,
+  aes(x = Dependencies, y = reorder(Package, Dependencies))
+) +
+  geom_col(
+    aes(fill = Package),
+    width = 0.6,
+    show.legend = FALSE
+  ) +
+  geom_text(
+    aes(label = Dependencies),
+    hjust = -0.3,
+    size = 5,
+    fontface = "bold"
+  ) +
+  scale_fill_manual(values = c("BadranSeq" = "#2E86AB", "SCpubr" = "#A23B72")) +
+  scale_x_continuous(
+    limits = c(0, 70),
+    breaks = seq(0, 70, by = 10),
+    expand = c(0, 0)
+  ) +
+  labs(
+    title = "Dependency Footprint Comparison",
+    subtitle = "BadranSeq maintains a 66% smaller dependency tree than SCpubr (19 vs 56 direct dependencies)",
+    x = "Number of Direct Dependencies",
+    y = NULL
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title = element_text(face = "bold", size = 16, hjust = 0.5),
+    plot.subtitle = element_text(size = 11, hjust = 0.5, colour = "grey40"),
+    axis.text.y = element_text(face = "bold", size = 12),
+    axis.text.x = element_text(colour = "grey40"),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor = element_blank(),
+    plot.margin = margin(20, 20, 20, 20)
+  )
+
+# Outputs ----------
+ggsave(
+  "../write/figures/fig8_dependency_comparison.svg",
+  p_deps,
+  width = 10,
+  height = 5,
+  bg = "white"
+)
 ```
