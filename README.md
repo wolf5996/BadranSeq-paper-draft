@@ -6,6 +6,8 @@
 
 This repository contains the manuscript describing [BadranSeq](https://github.com/wolf5996/BadranSeq), an R package that turns Seurat objects into publication-ready figures with zero boilerplate.
 
+For agent-facing repo context, see [AGENTS.md](AGENTS.md).
+
 <p align="center">
   <img src="badranseq_joss_figures/write/figures/fig1_comparison.png" width="85%" alt="Seurat default vs BadranSeq UMAP comparison"/>
 </p>
@@ -26,7 +28,7 @@ All figures are generated from a single script using the bundled PBMC 3k dataset
 
 ## Building the Manuscript
 
-Requires [Quarto](https://quarto.org/) (≥ 1.7.29) with typst support:
+Requires [Quarto](https://quarto.org/) with LaTeX support:
 
 ```bash
 quarto render paper.qmd
@@ -36,15 +38,21 @@ quarto render paper.qmd
 
 ```
 paper/
-├── paper.qmd                          # Main manuscript (Quarto + typst)
+├── paper.qmd                          # Main manuscript (Quarto + LaTeX PDF)
 ├── paper.pdf                          # Rendered output
 ├── references.bib                     # BibTeX bibliography (14 entries)
 ├── apa.csl                            # APA citation style
-├── _extensions/                       # Quarto preprint-typst template
 └── badranseq_joss_figures/
-    ├── scripts/generate_figures.qmd   # R code for all 7 figures
-    └── write/figures/                 # Output figures (SVG, PDF, PNG)
+    ├── scripts/generate_figures.qmd   # R code for all 8 figures
+    └── write/figures/                 # Output figures (SVG + PNG, plus fig8 as SVG)
 ```
+
+## Working Baseline
+
+- This is a standalone git repo nested inside the package repo's `paper/` directory
+- `main` is the last merged baseline
+- `comparison-rewrite` is the active manuscript branch and is currently 20 commits ahead of `main`
+- Generated or local-only paths include `.quarto/`, `paper_files/`, `paper.pdf`, and `context/`
 
 ## Regenerating Figures
 
