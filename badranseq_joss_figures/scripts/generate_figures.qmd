@@ -77,7 +77,7 @@ ggsave(
   "../write/figures/fig1_comparison.svg",
   p_combined,
   width = 16,
-  height = 10,
+  height = 14,
   bg = "white"
 )
 ```
@@ -168,8 +168,10 @@ pbmc3k$condition <- sample(
 
 # Seurat split (top row) - loses context
 p_seurat_split <- Seurat::DimPlot(pbmc3k, reduction = "umap", split.by = "condition") +
-  ggtitle("Seurat: split.by faceting") +
-  theme(plot.title = element_text(face = "bold", size = 12))
+  plot_annotation(
+    title = "Seurat: split.by faceting",
+    theme = theme(plot.title = element_text(face = "bold", size = 12))
+  )
 
 # BadranSeq split (bottom row) - preserves context via silhouette
 p_badran_split <- BadranSeq::do_UmapPlot(pbmc3k, split.by = "condition") +
@@ -179,7 +181,11 @@ p_badran_split <- BadranSeq::do_UmapPlot(pbmc3k, split.by = "condition") +
   )
 
 # Combine: Seurat on top, BadranSeq below
-p_combined <- p_seurat_split / p_badran_split +
+# wrap_elements() is required here: both DimPlot(split.by=) and do_UmapPlot(split.by=)
+# return patchwork objects. Nesting patchwork / patchwork causes the outer
+# plot_annotation() to override inner row titles. wrap_elements() treats each
+# annotated patchwork as an opaque unit, preserving its title.
+p_combined <- wrap_elements(full = p_seurat_split) / wrap_elements(full = p_badran_split) +
   plot_annotation(
     title = "Split-Panel Comparison: Context Preservation",
     subtitle = "Seurat (top) isolates each group, destroying spatial context. BadranSeq (bottom) preserves full embedding geometry via grey silhouettes.",
@@ -245,7 +251,9 @@ p_badran_features <- BadranSeq::do_FeaturePlot(
   )
 
 # Combine: Seurat on top, BadranSeq below
-p_combined <- p_seurat_features / p_badran_features +
+# wrap_elements() required: FeaturePlot() and do_FeaturePlot() both return patchwork
+# objects for multi-feature plots. See fig3 comment for explanation.
+p_combined <- wrap_elements(full = p_seurat_features) / wrap_elements(full = p_badran_features) +
   plot_annotation(
     title = "Feature Expression Visualisation Comparison",
     subtitle = "Seurat (top) uses default colour scales. BadranSeq (bottom) applies viridis scales, cell borders for legibility, and consistent publication styling.",

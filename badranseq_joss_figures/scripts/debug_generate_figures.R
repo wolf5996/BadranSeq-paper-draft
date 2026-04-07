@@ -40,7 +40,7 @@ figure_1 <- function() {
       )
     )
 
-  save_plot("fig1_comparison.svg", p_combined, 16, 10)
+  save_plot("fig1_comparison.svg", p_combined, 16, 14)
 }
 
 figure_2 <- function() {
@@ -79,8 +79,10 @@ figure_3 <- function() {
   pbmc3k$condition <- sample(c("Control", "Treatment"), ncol(pbmc3k), replace = TRUE)
 
   p_seurat_split <- Seurat::DimPlot(pbmc3k, reduction = "umap", split.by = "condition") +
-    ggtitle("Seurat: split.by faceting") +
-    theme(plot.title = element_text(face = "bold", size = 12))
+    plot_annotation(
+      title = "Seurat: split.by faceting",
+      theme = theme(plot.title = element_text(face = "bold", size = 12))
+    )
 
   p_badran_split <- BadranSeq::do_UmapPlot(pbmc3k, split.by = "condition") +
     plot_annotation(
@@ -88,7 +90,7 @@ figure_3 <- function() {
       theme = theme(plot.title = element_text(face = "bold", size = 12))
     )
 
-  p_combined <- p_seurat_split / p_badran_split +
+  p_combined <- wrap_elements(full = p_seurat_split) / wrap_elements(full = p_badran_split) +
     plot_annotation(
       title = "Split-Panel Comparison: Context Preservation",
       subtitle = paste(
@@ -129,7 +131,7 @@ figure_4 <- function() {
       theme = theme(plot.title = element_text(face = "bold", size = 12))
     )
 
-  p_combined <- p_seurat_features / p_badran_features +
+  p_combined <- wrap_elements(full = p_seurat_features) / wrap_elements(full = p_badran_features) +
     plot_annotation(
       title = "Feature Expression Visualisation Comparison",
       subtitle = paste(
