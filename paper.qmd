@@ -283,7 +283,7 @@ Continuous integration via GitHub Actions runs `R CMD check` on macOS, Windows, 
 
 The aesthetic design of BadranSeq draws on SCpubr [@blancocarmona2022] by Enrique Blanco Carmona.
 Design elements adapted from SCpubr include cell border rendering, colour palette generation, and the silhouette split approach.
-BadranSeq differs by providing a lighter-weight, native ggplot2 implementation with additional features: PCA variance labels, statistical violin plots, Sankey diagrams, tidy data extraction, and interactive cell selection.
+BadranSeq differs by providing a lighter-weight, native ggplot2 implementation with a 66\% smaller dependency footprint (19 versus 56 direct dependencies) while adding unique capabilities including PCA variance labels, statistical violin plots, Sankey diagrams, tidy data extraction, and interactive cell selection.
 
 The author thanks the developers of R [@rcore2024], Seurat [@hao2024], ggplot2 [@wickham2016], ggstatsplot [@patil2021], ggalluvial [@brunson2020], and UMAP [@mcinnes2018] for the foundational tools upon which BadranSeq is built.
 
