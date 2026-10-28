@@ -25,6 +25,8 @@ All figures are generated from a single script using the bundled PBMC 3k dataset
 | **Feature plot** — viridis scale with cell borders | **Elbow plot** + colour palette demo |
 | ![Stats violin](badranseq_joss_figures/write/figures/fig6_stats_violin.png) | ![Sankey](badranseq_joss_figures/write/figures/fig7_sankey.png) |
 | **Statistical violin** — Kruskal-Wallis + Dunn's pairwise | **Sankey diagram** — cluster-to-annotation mapping |
+| ![GSEA barplot](badranseq_joss_figures/write/figures/fig9_gsea_barplot.png) | ![Boil plot](badranseq_joss_figures/write/figures/fig10_boil_plot.png) |
+| **GSEA barplot** — diverging NES scale + leading-edge genes | **Boil plot** — detection rate separated from expression (after [boilplot](https://github.com/laraj1/boilplot-r) by Lara Jerman) |
 
 ## Building the Manuscript
 
@@ -40,18 +42,18 @@ quarto render paper.qmd
 paper/
 ├── paper.qmd                          # Main manuscript (Quarto + LaTeX PDF)
 ├── paper.pdf                          # Rendered output
-├── references.bib                     # BibTeX bibliography (14 entries)
+├── references.bib                     # BibTeX bibliography (18 entries)
 ├── apa.csl                            # APA citation style
 └── badranseq_joss_figures/
-    ├── scripts/generate_figures.qmd   # R code for all 8 figures
-    └── write/figures/                 # Output figures (SVG + PNG, plus fig8 as SVG)
+    ├── scripts/generate_figures.qmd   # R code for all 10 figures
+    └── write/figures/                 # Output figures (SVG; regenerate locally, not tracked)
 ```
 
 ## Working Baseline
 
 - This is a standalone git repo nested inside the package repo's `paper/` directory
 - `main` is the last merged baseline
-- `comparison-rewrite` is the active manuscript branch and is currently 20 commits ahead of `main`
+- `comparison-rewrite` is the merged comparison rewrite; `paper/v1.5-gsea-boil` adds the GSEA barplot and boil plot sections for BadranSeq 1.5
 - Generated or local-only paths include `.quarto/`, `paper_files/`, `paper.pdf`, and `context/`
 
 ## Regenerating Figures
@@ -60,7 +62,7 @@ Figures are **pre-generated** — the manuscript itself contains no executable c
 
 1. Install [BadranSeq](https://github.com/wolf5996/BadranSeq)
 2. Open `badranseq_joss_figures/scripts/generate_figures.qmd` in RStudio
-3. Run chunks interactively (code evaluation is disabled by default)
+3. Run chunks interactively (code evaluation is disabled by default), or `knitr::purl()` the file and `source()` it from the `scripts/` directory
 
 ## Links
 

@@ -8,7 +8,7 @@ author:
     affiliations:
       - name: Nuffield Department of Medicine, University of Oxford, Oxford, UK
 abstract: |
-  Single-cell RNA sequencing (scRNA-seq) has transformed our ability to resolve cellular heterogeneity, yet a persistent gap remains between exploratory analysis and publication-quality visualisation. Seurat, the dominant R framework for scRNA-seq, produces plots suited to data exploration but not to direct inclusion in manuscripts. Researchers routinely invest substantial effort in repetitive customisation: annotating PCA axes with variance explained, adding cell borders, styling themes, and constructing split-panel comparisons that preserve spatial context. Here we present BadranSeq, a lightweight R package built on native ggplot2 that closes this gap. BadranSeq provides automatic PCA variance annotation, cell border rendering, silhouette-based split-panel comparisons, statistical violin plots with nonparametric hypothesis testing, Sankey diagrams for categorical metadata, tidy data extraction replacing Seurat's `FetchData()`, interactive cell selection, and a consistent publication theme --- all from single function calls with sensible defaults. With only 19 direct dependencies compared to 56 for SCpubr, BadranSeq achieves a 66\% reduction in dependency footprint while delivering equivalent publication-ready aesthetics. BadranSeq is available under the MIT licence at \url{https://github.com/wolf5996/BadranSeq}.
+  Single-cell RNA sequencing (scRNA-seq) has transformed our ability to resolve cellular heterogeneity, yet a persistent gap remains between exploratory analysis and publication-quality visualisation. Seurat, the dominant R framework for scRNA-seq, produces plots suited to data exploration but not to direct inclusion in manuscripts. Researchers routinely invest substantial effort in repetitive customisation: annotating PCA axes with variance explained, adding cell borders, styling themes, and constructing split-panel comparisons that preserve spatial context. Here we present BadranSeq, a lightweight R package built on native ggplot2 that closes this gap. BadranSeq provides automatic PCA variance annotation, cell border rendering, silhouette-based split-panel comparisons, statistical violin plots with nonparametric hypothesis testing, Sankey diagrams for categorical metadata, GSEA result barplots with a diverging normalised enrichment score scale, boil plots that separate detection rate from expression level in zero-inflated genes, tidy data extraction replacing Seurat's `FetchData()`, interactive cell selection, and a consistent publication theme --- all from single function calls with sensible defaults. With only 21 direct dependencies compared to 56 for SCpubr, BadranSeq achieves a 63\% reduction in dependency footprint while delivering equivalent publication-ready aesthetics. BadranSeq is available under the MIT licence at \url{https://github.com/wolf5996/BadranSeq}.
 keywords: [single-cell RNA-seq, visualisation, Seurat, ggplot2, R]
 date: today
 date-format: "D MMMM YYYY"
@@ -140,7 +140,7 @@ As a result, researchers repeatedly write the same boilerplate: computing and fo
 
 BadranSeq eliminates this burden.
 Built entirely on native ggplot2 [@wickham2016], the package wraps the most common scRNA-seq visualisation tasks into single function calls that produce publication-ready output with no additional styling.
-Key capabilities include automatic variance-explained annotations on PCA axes, cell border rendering, a silhouette-based split comparison that preserves spatial context across panels, statistical violin plots with integrated nonparametric testing via ggstatsplot [@patil2021], Sankey diagrams for categorical metadata relationships via ggalluvial [@brunson2020], tidy data extraction functions that replace `Seurat::FetchData()`, interactive brush-based cell selection, and a consistent publication theme applied across all outputs.
+Key capabilities include automatic variance-explained annotations on PCA axes, cell border rendering, a silhouette-based split comparison that preserves spatial context across panels, statistical violin plots with integrated nonparametric testing via ggstatsplot [@patil2021], Sankey diagrams for categorical metadata relationships via ggalluvial [@brunson2020], horizontal GSEA barplots for clusterProfiler results [@wu2021] with a diverging normalised enrichment score (NES) scale, boil plots for zero-inflated expression that separate detection rate from expression level (a design from the boilplot package by Lara Jerman [@jerman2026]), tidy data extraction functions that replace `Seurat::FetchData()`, interactive brush-based cell selection, and a consistent publication theme applied across all outputs.
 BadranSeq is available under the MIT licence at <https://github.com/wolf5996/BadranSeq>.
 
 ## Statement of Need
@@ -153,31 +153,36 @@ This work is repeated across every analysis, every manuscript, and every laborat
 
 The cost is not merely time.
 Inconsistent visualisation code across projects hinders reproducibility of visual outputs and introduces opportunities for error.
-SCpubr [@blancocarmona2022] addressed this gap with a large suite of specialised plotting functions, but its breadth introduces a substantial dependency burden: 56 direct dependencies compared to 19 for BadranSeq (@fig-dependency).
-This 66\% reduction in dependency footprint translates to faster installation, fewer version conflicts, and reduced long-term maintenance overhead---particularly important when only core dimensionality reduction and feature plots are needed.
+SCpubr [@blancocarmona2022] addressed this gap with a large suite of specialised plotting functions, but its breadth introduces a substantial dependency burden: 56 direct dependencies compared to 21 for BadranSeq (@fig-dependency).
+This 63\% reduction in dependency footprint translates to faster installation, fewer version conflicts, and reduced long-term maintenance overhead---particularly important when only core dimensionality reduction and feature plots are needed.
 
-Three additional gaps remain underserved.
+Five additional gaps remain underserved.
 First, interactive cell selection: researchers frequently need to isolate spatially defined populations that do not correspond to existing metadata labels.
 Seurat's `CellSelector()` is tightly coupled to its own plotting pipeline and lacks additive or subtractive selection modes.
 Second, statistical annotation: comparing expression distributions across cell types requires manually extracting data, running tests, and formatting results onto plots.
 Third, tidy data extraction: `FetchData()` returns a data.frame with barcodes trapped in rownames, mixes expression and metadata in a single call, and provides no control over expression layers.
+Fourth, pathway enrichment results: the default clusterProfiler dotplot encodes gene ratio and significance but not the sign of the normalised enrichment score, so up- and down-regulated pathways are not visually separated and leading-edge genes are not shown.
+Fifth, zero inflation: conventional violins of single-cell expression are dominated by non-expressing cells, which flattens the distribution of the cells that do express the gene and hides the detection rate itself.
 
 BadranSeq addresses all of these.
-It provides a lightweight, opinionated visualisation and data extraction layer covering UMAP, PCA, feature expression, elbow plots, statistical violin plots, Sankey diagrams, and tidy data extraction --- with defaults that require no additional customisation.
+It provides a lightweight, opinionated visualisation and data extraction layer covering UMAP, PCA, feature expression, elbow plots, statistical violin plots, Sankey diagrams, GSEA barplots, boil plots, and tidy data extraction --- with defaults that require no additional customisation.
 By building directly on ggplot2 rather than wrapping higher-level abstractions, every output remains a standard ggplot2 object that researchers can further modify using familiar syntax.
 
 ## State of the Field
 
-Several tools address scRNA-seq visualisation in R (@fig-comparison, @fig-featureplot, @fig-silhouette, @fig-violin).
+Several tools address scRNA-seq visualisation in R (@fig-comparison, @fig-featureplot, @fig-silhouette, @fig-violin, @fig-gsea, @fig-boil).
 Seurat's built-in `DimPlot()` and `FeaturePlot()` [@hao2024] provide basic plotting but require manual styling for publication use---as demonstrated in the top rows of the comparison figures, Seurat outputs lack cell borders, consistent themes, and statistical annotations.
-SCpubr [@blancocarmona2022] offers over 30 specialised plot types with publication aesthetics, but requires 56 direct dependencies compared to 19 for BadranSeq---a 66\% larger dependency footprint that increases installation time and version conflict risk (@fig-dependency).
+SCpubr [@blancocarmona2022] offers over 30 specialised plot types with publication aesthetics, but requires 56 direct dependencies compared to 21 for BadranSeq---a 63\% larger dependency footprint that increases installation time and version conflict risk (@fig-dependency).
 dittoSeq provides colourblind-friendly visualisations with a focus on accessibility.
 scater, part of the Bioconductor ecosystem, includes plotting utilities integrated with the SingleCellExperiment class.
+For enrichment results, clusterProfiler and enrichplot [@wu2021] provide dotplots and ridge plots that summarise significance and gene ratio but leave the direction of enrichment to the reader.
+For zero-inflated expression, the boilplot package [@jerman2026] introduced the boil plot, which pairs a detection bar with a violin of non-zero values; it is a standalone single-function package with its own default theme.
 
 BadranSeq occupies a distinct position.
 Unlike Seurat's defaults, it produces publication-ready output without customisation, as shown in the bottom rows of the comparison figures.
-Unlike SCpubr, it focuses on the core visualisation tasks that researchers use daily, achieving equivalent publication aesthetics with a 66\% smaller dependency footprint.
+Unlike SCpubr, it focuses on the core visualisation tasks that researchers use daily, achieving equivalent publication aesthetics with a 63\% smaller dependency footprint.
 Unlike dittoSeq and scater, it operates natively on Seurat objects and integrates directly with the dominant scRNA-seq workflow.
+It extends the boil plot idea with group-level filtering, median annotation, an optional boxplot, and the same palette and theme as every other BadranSeq figure, so zero-inflation-aware plots sit alongside UMAPs and violins without restyling.
 
 @tbl-comparison summarises the functional differences.
 
@@ -193,7 +198,9 @@ Unlike dittoSeq and scater, it operates natively on Seurat objects and integrate
 | Statistical violin plots       |   No   |   Yes  | Kruskal--Wallis |
 | Sankey / alluvial diagrams     |   No   |   Yes  |    Yes    |
 | Tidy data extraction           |  FetchData | No  | Tibble-based |
-| Direct dependencies            |   ---  |   56   |    19     |
+| GSEA result barplots           |   No   |  Yes   | Diverging NES + leading edge |
+| Zero-inflation-aware violins   |   No   |   No   | Boil plots |
+| Direct dependencies            |   ---  |   56   |    21     |
 
 : Comparison of default capabilities between Seurat, SCpubr, and BadranSeq. {#tbl-comparison}
 
@@ -201,7 +208,7 @@ Unlike dittoSeq and scater, it operates natively on Seurat objects and integrate
 
 BadranSeq is built on a unified architecture where all functions accept Seurat objects and return native ggplot2 objects, preserving compatibility with existing workflows whilst eliminating repetitive styling steps. The package follows a "sensible defaults" philosophy: each function produces publication-ready output without requiring additional customisation, yet returned plots remain standard ggplot objects for optional downstream modification.
 
-The design addresses a critical gap in the Seurat ecosystem. Whilst Seurat excels at data processing, its plotting functions prioritise flexibility over presentation quality, forcing researchers to repeatedly perform manual styling tasks---adding variance labels, configuring colour scales, applying consistent themes---rather than focusing on biological interpretation. BadranSeq automates these decisions using established visualisation best practices, as demonstrated across the comparison figures (@fig-comparison, @fig-pca, @fig-featureplot, @fig-elbow, @fig-silhouette, @fig-violin).
+The design addresses a critical gap in the Seurat ecosystem. Whilst Seurat excels at data processing, its plotting functions prioritise flexibility over presentation quality, forcing researchers to repeatedly perform manual styling tasks---adding variance labels, configuring colour scales, applying consistent themes---rather than focusing on biological interpretation. BadranSeq automates these decisions using established visualisation best practices, as demonstrated across the comparison figures (@fig-comparison, @fig-pca, @fig-featureplot, @fig-elbow, @fig-silhouette, @fig-violin, @fig-boil, @fig-gsea).
 
 The architecture employs a routing pattern where `do_DimPlot()` serves as a unified entry point, dispatching to specialised functions based on the requested reduction type. This enables consistent interfaces across visualisation types whilst allowing reduction-specific enhancements such as automatic variance annotation for PCA or optimised colour scaling for feature plots. Detailed code comparisons demonstrating efficiency gains over standard Seurat workflows are provided in Appendix A.
 
@@ -281,9 +288,19 @@ The underlying `ggstatsplot` framework provides access to advanced statistical o
 This automated approach to statistical annotation represents a substantial improvement over manual workflows, particularly for exploratory analysis where multiple comparisons across different genes and cell type combinations require rapid iteration.
 The consistent formatting and methodological choices support reproducible research practices whilst reducing the statistical expertise required for appropriate test selection and result interpretation.
 
-As discussed in Section 4.8, the statistical functionality integrates seamlessly with BadranSeq's tidy data extraction capabilities, enabling researchers to access the underlying statistical results for custom analysis workflows whilst benefiting from the automated visualisation pipeline.
+As discussed in @sec-data-extraction, the statistical functionality integrates seamlessly with BadranSeq's tidy data extraction capabilities, enabling researchers to access the underlying statistical results for custom analysis workflows whilst benefiting from the automated visualisation pipeline.
 
 ![Statistical violin comparison on a matched subset (Naive CD4 T, Memory CD4 T, and CD8 T cells). Left: Seurat's `VlnPlot()` shows expression distributions without statistical annotation. Right: BadranSeq's `do_StatsViolinPlot()` integrates Kruskal--Wallis omnibus testing and Dunn's pairwise comparisons with automatic formatting, enabling immediate interpretation.](badranseq_joss_figures/write/figures/fig6_stats_violin.svg){#fig-violin width="90%"}
+
+### Zero-Inflation-Aware Expression Visualisation
+
+Violin plots of single-cell expression answer two questions at once and, as a result, answer neither well (@fig-boil). Most cells do not express a given gene, so the violin's mass sits at zero; the distribution among the cells that do express the gene is squeezed into a thin tail, and the fraction of expressing cells---often the more informative quantity---has to be read from the relative thickness of the base. Dot plots already separate these two quantities for marker panels, but no equivalent existed for the per-cell distribution view.
+
+The boil plot, introduced by Lara Jerman in the boilplot package [@jerman2026], resolves this by splitting the display at zero. Above the baseline, the violin, jittered points, and summary statistics are computed from non-zero cells only, so the shape reflects expression among expressing cells. Below the baseline, a horizontal bar per group shows the proportion of cells with non-zero expression as a filled fraction of a grey track, with the exact percentage printed beneath. BadranSeq's `do_BoilPlot()` reimplements this design natively on Seurat objects. The geometry of the detection bars, the filled-circle point style, the equal-width violins, and the bar colours follow the original implementation; the function then adds BadranSeq's palette and theme, a median (or mean) diamond with its value, an optional boxplot, `group.levels` for subsetting and ordering, and `ncol`/`nrow` for multi-gene layouts that stack vertically by default.
+
+Two choices depart from the original. First, the `min.nonzero` threshold removes a group from a gene's panel entirely when too few cells express the gene, rather than drawing a violin from an unstable density; the percentages of the remaining groups are still computed over all their cells. Second, metadata columns are rejected, because quantities such as library size are never zero-inflated and belong in `do_ViolinPlot()`. The result is a plot in which a 5\% detection rate and a 95\% detection rate are immediately distinguishable, and in which the expression level of the cells that matter is no longer hidden behind the cells that do not.
+
+![Zero-inflated expression comparison for CD8A and GZMA across PBMC 3k cell types. Top: Seurat's `VlnPlot()`, where zeros dominate every violin and the distribution among expressing cells is compressed. Bottom: BadranSeq's `do_BoilPlot()`, where detection bars below zero give the percentage of expressing cells per group and the violins above zero show expression among those cells only. Groups with fewer than ten expressing cells are omitted. Design after boilplot by Lara Jerman [@jerman2026].](badranseq_joss_figures/write/figures/fig10_boil_plot.svg){#fig-boil width="100%"}
 
 ### Categorical Relationship Visualisation
 
@@ -295,28 +312,39 @@ Beyond cluster validation, Sankey diagrams excel at exploring three-way relation
 
 ![Sankey diagram showing the relationship between Seurat cluster assignments (left) and cell type annotations (right) in the PBMC 3k dataset.](badranseq_joss_figures/write/figures/fig7_sankey.svg){#fig-sankey width="90%"}
 
+### Pathway Enrichment Visualisation
+
+Gene set enrichment analysis (GSEA) results from clusterProfiler [@wu2021] or ReactomePA [@yu2016] carry a signed statistic, the normalised enrichment score (NES), whose direction is central to interpretation: a pathway is enriched among up-regulated or among down-regulated genes. The default dotplot ranks pathways by gene ratio and colours them by adjusted p-value, so the sign of NES is absent from the figure and the leading-edge genes that drive each score are never shown (@fig-gsea).
+
+BadranSeq's `do_GseaPlot()` renders the result as a horizontal barplot in which bar length is NES and fill follows a diverging RdBu scale centred on zero, so positively and negatively enriched pathways separate visually without a legend lookup. Each bar is labelled with its adjusted p-value, and each pathway label lists the leading-edge gene count and the first genes of the core enrichment set, which the bundled example stores as HGNC symbols. The `number_of_pathways` argument selects the top pathways in each direction; `selection` plots named pathways instead; and for GO results `simplify_go` applies `clusterProfiler::simplify()` to collapse redundant terms before plotting. Because clusterProfiler is a suggested rather than imported dependency, GO simplification is loaded only when a GO result is supplied.
+
+The package ships two objects to make the workflow reproducible end to end: `dea_pbmc3k_mono`, a Wilcoxon differential expression table for the CD14+ monocyte cluster against all other cells, and `gsea_pbmc3k`, the `gseGO()` result computed from that ranking, with the generating script included in the repository.
+
+![GSEA result comparison for CD14+ monocytes versus all other PBMC 3k clusters (GO Biological Process). Top: clusterProfiler's default `dotplot()`, which encodes gene ratio and adjusted p-value but not the sign of NES. Bottom: BadranSeq's `do_GseaPlot()`, with a diverging scale centred on NES = 0, adjusted p-values on the bars, and leading-edge genes in the pathway labels.](badranseq_joss_figures/write/figures/fig9_gsea_barplot.svg){#fig-gsea width="100%"}
+
 ### Dependency Engineering
 
 The R package ecosystem's evolution has created complex dependency webs imposing substantial hidden costs. Feature-rich packages often require large dependency trees that complicate installation, increase version conflict vulnerability, and impose maintenance burdens exceeding the value of additional features. This presents particular challenges for visualisation packages, where core functionality can be achieved with modest dependencies, yet comprehensive implementations bundle extensive features most users never require (@fig-dependency).
 
 Version conflicts become critical in research environments requiring stability across multi-year project timelines. Different packages requiring incompatible dependency versions can render previously functional code inoperable. Continuous integration systems amplify these problems, as resolution failures break analytical pipelines for reasons unrelated to scientific content.
 
-BadranSeq adopts a minimalist philosophy prioritising core functionality. The package maintains 19 direct dependencies compared to 56 for SCpubr---a 66\% reduction translating to reduced resolution complexity, faster installation, and lower conflict probability. This streamlined approach does not compromise functionality for core tasks: UMAP plots, feature expression overlays, PCA visualisations, and statistical comparisons. Installation time scales with dependency count, whilst conflict probability increases combinatorially. The reduction supports long-term reproducibility without sacrificing publication-ready aesthetics.
+BadranSeq adopts a minimalist philosophy prioritising core functionality. The package maintains 21 direct dependencies compared to 56 for SCpubr---a 63\% reduction translating to reduced resolution complexity, faster installation, and lower conflict probability. This streamlined approach does not compromise functionality for core tasks: UMAP plots, feature expression overlays, PCA visualisations, and statistical comparisons. Installation time scales with dependency count, whilst conflict probability increases combinatorially. The reduction supports long-term reproducibility without sacrificing publication-ready aesthetics.
 
 BadranSeq achieves this reduction through careful selection of established, stable packages with minimal transitive dependencies.
 The core visualisation capabilities rely primarily on ggplot2, which provides a mature and stable foundation for publication-quality graphics.
 Statistical functionality leverages ggstatsplot for automated testing, whilst maintaining the option for users to implement custom statistical workflows using the extracted data structures.
+Optional capabilities---statistical testing, Sankey diagrams, GO term simplification, multi-panel layouts, and rasterisation---are declared as suggested packages and loaded only when the corresponding function is called, so a user who never plots enrichment results never installs clusterProfiler.
 This approach preserves flexibility whilst avoiding the dependency overhead associated with comprehensive statistical frameworks.
 
 The architectural decision aligns with broader trends in software engineering towards modular, focused packages that excel at specific tasks rather than attempting comprehensive feature coverage.
 Users benefit from reduced complexity, increased reliability, and clearer maintenance expectations, whilst retaining the ability to combine BadranSeq with other specialised packages for advanced workflows that require functionality beyond the core visualisation tasks.
 
 As detailed in Table 1, this dependency reduction does not compromise feature parity with existing solutions.
-BadranSeq provides equivalent or superior functionality across all major visualisation categories whilst maintaining the 66\% dependency advantage that supports long-term analytical reproducibility.
+BadranSeq provides equivalent or superior functionality across all major visualisation categories whilst maintaining the 63\% dependency advantage that supports long-term analytical reproducibility.
 
-![Dependency footprint comparison between BadranSeq and SCpubr. BadranSeq maintains 19 direct dependencies compared to 56 for SCpubr, representing a 66\% reduction in dependency burden. This translates to faster installation, fewer version conflicts, and reduced long-term maintenance overhead while achieving equivalent publication-ready aesthetics.](badranseq_joss_figures/write/figures/fig8_dependency_comparison.svg){#fig-dependency width="80%"}
+![Dependency footprint comparison between BadranSeq and SCpubr. BadranSeq maintains 21 direct dependencies (imports and suggests) compared to 56 for SCpubr, representing a 63\% reduction in dependency burden. This translates to faster installation, fewer version conflicts, and reduced long-term maintenance overhead while achieving equivalent publication-ready aesthetics.](badranseq_joss_figures/write/figures/fig8_dependency_comparison.svg){#fig-dependency width="80%"}
 
-### Data Extraction and Interoperability
+### Data Extraction and Interoperability {#sec-data-extraction}
 
 The interface between single-cell analysis and downstream workflows encounters friction at data extraction. Seurat's `FetchData()` returns structures conflicting with tidy data principles: barcodes trapped in rownames, mixed expression and metadata without clear layer specification, and data frames requiring extensive manipulation for dplyr and ggplot2 integration.
 
@@ -345,17 +373,21 @@ The threshold is configurable through the `raster` parameter.
 ## Availability and Reproducibility
 
 BadranSeq is publicly available on GitHub and installable via standard R package managers.
-The package ships with a bundled PBMC 3k dataset (SCTransform-normalised, with PCA and UMAP precomputed) for immediate testing and reproducible examples.
+The package ships with a bundled PBMC 3k dataset (SCTransform-normalised, with PCA and UMAP precomputed), together with a differential expression table and a GSEA result derived from it, for immediate testing and reproducible examples.
 A pkgdown documentation site at <https://wolf5996.github.io/BadranSeq/> provides function references and usage vignettes.
-Continuous integration via GitHub Actions runs `R CMD check` on macOS, Windows, and Ubuntu.
+Continuous integration via GitHub Actions runs `R CMD check` on macOS, Windows, and Ubuntu, against both the released and the development version of R.
 
 ## Acknowledgements
 
 The aesthetic design of BadranSeq draws on SCpubr [@blancocarmona2022] by Enrique Blanco Carmona.
 Design elements adapted from SCpubr include cell border rendering, colour palette generation, and the silhouette split approach.
-BadranSeq differs by providing a lighter-weight, native ggplot2 implementation with a 66\% smaller dependency footprint (19 versus 56 direct dependencies) while adding unique capabilities including PCA variance labels, statistical violin plots, Sankey diagrams, tidy data extraction, and interactive cell selection.
+BadranSeq differs by providing a lighter-weight, native ggplot2 implementation with a 63\% smaller dependency footprint (21 versus 56 direct dependencies) while adding unique capabilities including PCA variance labels, statistical violin plots, Sankey diagrams, GSEA barplots, boil plots, tidy data extraction, and interactive cell selection.
 
-The author thanks the developers of R [@rcore2024], Seurat [@hao2024], ggplot2 [@wickham2016], ggstatsplot [@patil2021], ggalluvial [@brunson2020], and UMAP [@mcinnes2018] for the foundational tools upon which BadranSeq is built.
+The boil plot implemented in `do_BoilPlot()` is the design of Lara Jerman, published as the boilplot package for R and Python [@jerman2026].
+The detection-bar geometry, the non-zero violin and point styling, and the equal-width violin scaling in BadranSeq follow her implementation directly; the surrounding controls, theme, and palette are BadranSeq's own.
+The author is grateful for the idea and for releasing it under a permissive licence.
+
+The author thanks the developers of R [@rcore2024], Seurat [@hao2024], ggplot2 [@wickham2016], ggstatsplot [@patil2021], ggalluvial [@brunson2020], clusterProfiler [@wu2021], and UMAP [@mcinnes2018] for the foundational tools upon which BadranSeq is built.
 
 ## Appendix A: Code Efficiency Comparisons
 
@@ -582,5 +614,78 @@ expr_long <- fetch_feature_data(
 ```
 
 **Philosophy and efficiency:** The tidy data principle—where each variable forms a column, each observation forms a row, and each type of observational unit forms a table—underpins modern data science workflows. Seurat's `FetchData()` violates this principle by trapping identifiers in rownames, mixing expression and metadata without clear structure, and returning formats requiring extensive manipulation before use with standard analytical tools. This creates friction at the interface between single-cell analysis and downstream statistical or visualisation workflows, forcing researchers to write boilerplate data wrangling code. BadranSeq's extraction functions embody the principle that data structures should facilitate analysis, not impede it. By returning explicit tidy tibbles with clear column naming conventions, the functions enable immediate integration with dplyr, ggplot2, and the broader tidyverse ecosystem. This approach eliminates a common source of analysis friction, supports composable analytical pipelines, and ensures that data extraction choices are explicit and reproducible. The explicit layer control addresses ambiguity in modern Seurat objects containing multiple expression matrices, ensuring that analytical decisions about which expression values to analyse are transparent and documented.
+
+### A.8 GSEA Result Visualisation
+
+**clusterProfiler approach:** Default dotplot, then manual work to show NES direction and leading-edge genes.
+
+```r
+# Default view - gene ratio and p.adjust, NES sign not encoded
+p <- enrichplot::dotplot(gsea_result, showCategory = 10)
+
+# Manual barplot with diverging NES scale:
+df <- as.data.frame(gsea_result)
+df <- df[order(df$NES), ][c(1:10, (nrow(df) - 9):nrow(df)), ]
+df$n_leading <- lengths(strsplit(df$core_enrichment, "/"))
+p <- ggplot(df, aes(x = reorder(Description, NES), y = NES, fill = NES)) +
+  geom_col() +
+  coord_flip() +
+  scale_fill_distiller(palette = "RdBu", limits = c(-max(abs(df$NES)), max(abs(df$NES)))) +
+  geom_text(aes(label = signif(p.adjust, 2))) +
+  theme_minimal()
+# Additional code needed for GO term simplification, gene symbols in labels
+```
+
+**BadranSeq approach:** Diverging NES barplot with labels in one call.
+
+```r
+# Top pathways in each direction, padj labels, leading-edge genes
+p <- do_GseaPlot(gsea_result, analysis_name = "CD14+ Mono vs others")
+
+# Named pathways only
+p <- do_GseaPlot(
+  gsea_result,
+  selection = c("leukocyte migration", "antigen processing and presentation")
+)
+# Automatic: GO detection and simplify(), symmetric diverging scale,
+# p-value labels, leading-edge counts and symbols, publication theme
+```
+
+**Philosophy and efficiency:** The sign of a normalised enrichment score is not a detail; it is the biological claim. A visualisation that omits it forces readers to consult a table, and one that encodes it only in text invites misreading. The manual approach requires the analyst to subset the result table in both directions, construct a symmetric colour scale so that zero sits at the midpoint, parse the core enrichment column to count leading-edge genes, and decide separately whether redundant GO terms should be collapsed. Each of these steps is a place where two analysts will make different choices and produce figures that are not comparable. `do_GseaPlot()` fixes the choices that should not vary---the symmetric scale, the direction-balanced selection, the labelling---and exposes the choices that should, such as how many pathways to show or which to name. The bundled `gsea_pbmc3k` object lets a reader reproduce the figure in this paper from the installed package alone.
+
+### A.9 Zero-Inflated Expression
+
+**Seurat approach:** Violin dominated by zeros; detection rate must be computed separately.
+
+```r
+# Zeros flatten every violin
+p <- VlnPlot(seurat_obj, features = "CD8A", group.by = "seurat_annotations")
+
+# Manual detection rate and non-zero violin:
+expr <- FetchData(seurat_obj, vars = c("CD8A", "seurat_annotations"))
+pct <- aggregate(CD8A > 0 ~ seurat_annotations, expr, mean)
+nonzero <- expr[expr$CD8A > 0, ]
+p <- ggplot(nonzero, aes(seurat_annotations, CD8A, fill = seurat_annotations)) +
+  geom_violin(scale = "width") +
+  geom_jitter(shape = 21, size = 0.7, width = 0.1)
+# Additional code needed for detection bars below zero, percentage labels,
+# dropping groups with too few expressing cells, consistent theme
+```
+
+**BadranSeq approach:** Boil plot in one call, after Jerman's boilplot.
+
+```r
+# Detection bars + non-zero violins, median diamond, groups < 10 cells dropped
+p <- do_BoilPlot(seurat_obj, features = c("CD8A", "GZMA"),
+                 group.by = "seurat_annotations")
+
+# Selected groups in a chosen order, mean instead of median, with boxplot
+p <- do_BoilPlot(seurat_obj, features = "NKG7",
+                 group.by = "seurat_annotations",
+                 group.levels = c("NK", "CD8 T", "Memory CD4 T"),
+                 centrality.fn = "mean", boxplot = TRUE)
+```
+
+**Philosophy and efficiency:** Zero inflation is the defining property of single-cell count data, yet the standard distribution plot treats zeros as ordinary observations. The consequence is a figure in which the two quantities a reader wants---how many cells express the gene, and how strongly---are entangled in the thickness of a violin's base. Dot plots solved this for marker overviews by mapping detection to size and level to colour; the boil plot [@jerman2026] solves it for the per-cell distribution view by giving each quantity its own region of the panel. Building the equivalent by hand means maintaining two data frames, placing rectangles in data coordinates below an axis that must still start at zero, and deciding what to draw when a group has three expressing cells. BadranSeq adopts the original design wholesale where it is right, credits it, and changes it only where a Seurat-centred workflow needs something different: group filtering by expressing-cell count, median annotation consistent with `do_ViolinPlot()`, and the shared theme. The figure that results is honest about sparsity in a way that a conventional violin cannot be.
 
 ## References
