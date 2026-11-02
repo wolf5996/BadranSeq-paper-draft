@@ -33,6 +33,8 @@ Figures are saved to `../write/figures/` and referenced by `paper.qmd` via `badr
 | 6 | `fig6_stats_violin.svg` | Statistical violin comparison (side-by-side) |
 | 7 | `fig7_sankey.svg` | Sankey/alluvial diagram for metadata relationships |
 | 8 | `fig8_dependency_comparison.svg` | Dependency footprint comparison (bar chart) |
+| 9 | `fig9_gsea_barplot.svg` | GSEA result comparison (clusterProfiler dotplot vs BadranSeq barplot) |
+| 10 | `fig10_boil_plot.svg` | Zero-inflated expression comparison (Seurat VlnPlot vs BadranSeq boil plot) |
 
 ## Figure 1: UMAP Default Comparison
 
@@ -431,7 +433,7 @@ ggsave(
 
 This figure quantifies the dependency burden difference between BadranSeq and SCpubr, illustrating the trade-off between functionality and maintenance overhead.
 
-- **BadranSeq**: 19 direct dependencies (minimal footprint)
+- **BadranSeq**: 21 direct dependencies (minimal footprint)
 - **SCpubr**: 56 direct dependencies (broad functionality)
 - **Implication**: Reduced installation time, fewer version conflicts, lower long-term maintenance burden
 
@@ -445,7 +447,7 @@ library(ggplot2)
 # Dependency counts from DESCRIPTION files
 dependency_data <- data.frame(
   Package = c("BadranSeq", "SCpubr"),
-  Dependencies = c(19, 56),
+  Dependencies = c(21, 56),
   stringsAsFactors = FALSE
 )
 
@@ -473,7 +475,7 @@ p_deps <- ggplot(
   ) +
   labs(
     title = "Dependency Footprint Comparison",
-    subtitle = "BadranSeq maintains a 66% smaller dependency tree than SCpubr (19 vs 56 direct dependencies)",
+    subtitle = "BadranSeq maintains a 63% smaller dependency tree than SCpubr (21 vs 56 direct dependencies)",
     x = "Number of Direct Dependencies",
     y = NULL
   ) +
@@ -494,6 +496,125 @@ ggsave(
   p_deps,
   width = 10,
   height = 5,
+  bg = "white"
+)
+```
+
+## Figure 9: GSEA Result Comparison
+
+This figure compares the default clusterProfiler/enrichplot view of a GSEA result with BadranSeq's `do_GseaPlot()`, using the bundled `gsea_pbmc3k` object (CD14+ monocytes vs all other clusters, GO Biological Process).
+
+- **Top**: `enrichplot::dotplot()` — the default gseaResult view; NES direction is not encoded
+- **Bottom**: BadranSeq's `do_GseaPlot()` — horizontal bars with a diverging NES scale centred on zero, adjusted p-values on the bars, and leading-edge genes in the labels
+
+```{r}
+#| label: fig9-gsea-barplot
+
+# Libraries ----------
+library(BadranSeq)
+library(ggplot2)
+library(patchwork)
+library(enrichplot)
+
+# Inputs ----------
+data(gsea_pbmc3k)
+
+# Processing ----------
+p_dotplot <- enrichplot::dotplot(gsea_pbmc3k, showCategory = 10) +
+  ggtitle("clusterProfiler: dotplot()") +
+  theme(plot.title = element_text(face = "bold", size = 12))
+
+p_badran_gsea <- BadranSeq::do_GseaPlot(
+  gsea_pbmc3k,
+  analysis_name = "CD14+ Mono vs others",
+  simplify_go = FALSE,
+  number_of_pathways = 6
+) +
+  ggtitle("BadranSeq: do_GseaPlot()") +
+  theme(plot.title = element_text(face = "bold", size = 12))
+
+p_combined <- wrap_elements(p_dotplot) / wrap_elements(p_badran_gsea) +
+  plot_layout(heights = c(1, 1.1)) +
+  plot_annotation(
+    title = "GSEA Result Visualisation Comparison",
+    subtitle = "clusterProfiler's dotplot (top) encodes gene ratio and p-value but not NES direction.\nBadranSeq (bottom) centres a diverging scale on NES = 0 and labels bars with adjusted p-values and leading-edge genes.",
+    theme = theme(
+      plot.title = element_text(face = "bold", size = 16, hjust = 0.5),
+      plot.subtitle = element_text(size = 11, hjust = 0.5, colour = "grey40")
+    )
+  )
+
+# Outputs ----------
+ggsave(
+  "../write/figures/fig9_gsea_barplot.svg",
+  p_combined,
+  width = 13,
+  height = 15,
+  bg = "white"
+)
+```
+
+## Figure 10: Zero-Inflated Expression Comparison
+
+This figure compares Seurat's `VlnPlot()` with BadranSeq's `do_BoilPlot()` for two zero-inflated genes. The boil plot design follows the boilplot package by Lara Jerman (<https://github.com/laraj1/boilplot-r>).
+
+- **Top**: Seurat's `VlnPlot()` — zeros dominate the violins and hide the distribution among expressing cells
+- **Bottom**: BadranSeq's `do_BoilPlot()` — detection bars below zero give the percentage of expressing cells; violins above zero show the non-zero distribution only; groups with fewer than 10 expressing cells are dropped
+
+```{r}
+#| label: fig10-boil-plot
+
+# Libraries ----------
+library(BadranSeq)
+library(Seurat)
+library(ggplot2)
+library(patchwork)
+
+# Inputs ----------
+data(pbmc3k)
+boil_genes <- c("CD8A", "GZMA")
+
+# Processing ----------
+p_seurat_vln <- Seurat::VlnPlot(
+  pbmc3k,
+  features = boil_genes,
+  group.by = "seurat_annotations",
+  pt.size = 0,
+  ncol = 2
+) +
+  plot_annotation(
+    title = "Seurat: VlnPlot()",
+    theme = theme(plot.title = element_text(face = "bold", size = 12))
+  )
+
+p_badran_boil <- BadranSeq::do_BoilPlot(
+  pbmc3k,
+  features = boil_genes,
+  group.by = "seurat_annotations",
+  ncol = 2
+) +
+  plot_annotation(
+    title = "BadranSeq: do_BoilPlot()",
+    theme = theme(plot.title = element_text(face = "bold", size = 12))
+  )
+
+# wrap_elements() keeps each annotated patchwork intact (see Figure 3)
+p_combined <- wrap_elements(p_seurat_vln) / wrap_elements(p_badran_boil) +
+  plot_annotation(
+    title = "Zero-Inflated Expression Comparison",
+    subtitle = "Seurat (top) lets zeros flatten the violins. BadranSeq (bottom) separates detection rate (bars) from expression among expressing cells (violins).",
+    theme = theme(
+      plot.title = element_text(face = "bold", size = 16, hjust = 0.5),
+      plot.subtitle = element_text(size = 11, hjust = 0.5, colour = "grey40")
+    )
+  )
+
+# Outputs ----------
+ggsave(
+  "../write/figures/fig10_boil_plot.svg",
+  p_combined,
+  width = 14,
+  height = 13,
   bg = "white"
 )
 ```
